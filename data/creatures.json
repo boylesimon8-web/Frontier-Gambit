@@ -1,0 +1,436 @@
+{
+  "version": "1.0",
+  "creatures": [
+    {
+      "id": "rattlesnake",
+      "name": "Rattlesnake",
+      "icon": "🐍",
+      "rarity": "common",
+      "drop_grades": [1, 2],
+      "drop_weight": 30,
+      "gather_trips_required": 3,
+      "target": "player",
+      "duration_seconds": 600,
+      "effects": {
+        "gather_speed_reduction": 0.40,
+        "march_speed_reduction": 0.25,
+        "sender_hidden": true,
+        "reveals_on_armadillo": true
+      },
+      "countered_by": ["armadillo"],
+      "fusion_partner": "coyote",
+      "fusion_result": "phantom_bite",
+      "flavor": "Silent bite. No warning."
+    },
+    {
+      "id": "mosquito_swarm",
+      "name": "Mosquito Swarm",
+      "icon": "🦟",
+      "rarity": "common",
+      "drop_grades": [1, 2],
+      "drop_weight": 35,
+      "gather_trips_required": 3,
+      "target": "alliance",
+      "duration_seconds": 900,
+      "effects": {
+        "solo": {
+          "defense_reduction": 0.08
+        },
+        "horde": {
+          "threshold": 5,
+          "window_seconds": 600,
+          "warning_seconds": 180,
+          "defense_reduction": 0.35,
+          "gather_speed_reduction": 0.20,
+          "bounty_token_bonus": 0.15,
+          "horde_duration_seconds": 1200
+        }
+      },
+      "countered_by": ["armadillo"],
+      "fusion_partner": "firefly",
+      "fusion_result": "night_horde",
+      "flavor": "Tiny. Annoying. Unstoppable in numbers."
+    },
+    {
+      "id": "puma_frenzy",
+      "name": "Puma Frenzy",
+      "icon": "🦁",
+      "rarity": "uncommon",
+      "drop_grades": [2, 3],
+      "drop_weight": 18,
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": 1200,
+      "effects": {
+        "attack_bonus": 0.50,
+        "pounce_enabled": true,
+        "pounce_lead_troop_elimination": 0.05,
+        "pounce_charges": 1
+      },
+      "flavor": "Your puma remembers the old frontier."
+    },
+    {
+      "id": "scorpion",
+      "name": "Scorpion",
+      "icon": "🦂",
+      "rarity": "common",
+      "drop_grades": [1, 2],
+      "drop_weight": 28,
+      "gather_trips_required": 3,
+      "target": "tile",
+      "duration_seconds": 7200,
+      "effects": {
+        "trigger_casualties": 0.20,
+        "invisible": true,
+        "single_use": true,
+        "targets_gather_marches_only": true
+      },
+      "fusion_partner": "tarantula",
+      "fusion_result": "nest",
+      "flavor": "Touch my tile. I dare you."
+    },
+    {
+      "id": "armadillo",
+      "name": "Armadillo",
+      "icon": "🦔",
+      "rarity": "common",
+      "drop_grades": [1, 2],
+      "drop_weight": 25,
+      "gather_trips_required": 3,
+      "target": "self",
+      "duration_seconds": -1,
+      "effects": {
+        "blocks": ["rattlesnake", "mosquito_swarm"],
+        "reveals_sender": true,
+        "single_use": true,
+        "passive": true
+      },
+      "flavor": "Rolls up. Shrugs it off."
+    },
+    {
+      "id": "coyote",
+      "name": "Coyote",
+      "icon": "🦊",
+      "rarity": "uncommon",
+      "drop_grades": [2, 3],
+      "drop_weight": 20,
+      "gather_trips_required": 0,
+      "target": "player",
+      "duration_seconds": 0,
+      "effects": {
+        "ghost_march": true,
+        "troops": 0,
+        "damage": 0,
+        "looks_like_real_march": true,
+        "travel_speed": "normal"
+      },
+      "flavor": "You saw something. You saw nothing."
+    },
+    {
+      "id": "roadrunner",
+      "name": "Roadrunner",
+      "icon": "🐦",
+      "rarity": "uncommon",
+      "drop_grades": [2, 3],
+      "drop_weight": 15,
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": -1,
+      "effects": {
+        "passive": true,
+        "activation_window_seconds": 30,
+        "teleports_city": true,
+        "incoming_march_voided": true,
+        "gathers_continue_after_teleport": true
+      },
+      "flavor": "Gone before you blinked."
+    },
+    {
+      "id": "prairie_dog",
+      "name": "Prairie Dog Network",
+      "icon": "🐿",
+      "rarity": "uncommon",
+      "drop_grades": [2, 3],
+      "drop_weight": 16,
+      "gather_trips_required": 0,
+      "target": "alliance",
+      "duration_seconds": 1800,
+      "effects": {
+        "alliance_wide": true,
+        "advance_warning_seconds": 120,
+        "shows_march_origin": true,
+        "shows_march_direction": true,
+        "hides_troop_count": true
+      },
+      "fusion_partner": "eagle_eye",
+      "fusion_result": "full_recon",
+      "flavor": "The ground knows before you do."
+    },
+    {
+      "id": "vulture",
+      "name": "Vulture",
+      "icon": "🦅",
+      "rarity": "uncommon",
+      "drop_grades": [1, 2, 3],
+      "drop_weight": 14,
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": -1,
+      "effects": {
+        "passive": true,
+        "monitor_radius_tiles": 5,
+        "trigger": "player_zeroed",
+        "bonus_gather_window_seconds": 600,
+        "gold_dust_bonus": 0.50
+      },
+      "flavor": "Patient. Efficient. Merciless."
+    },
+    {
+      "id": "tarantula",
+      "name": "Tarantula",
+      "icon": "🕷",
+      "rarity": "rare",
+      "drop_grades": [3],
+      "drop_weight": 10,
+      "gather_trips_required": 0,
+      "target": "tile",
+      "duration_seconds": 7200,
+      "effects": {
+        "invisible": true,
+        "march_speed_reduction": 0.70,
+        "blocks_reinforcements": true,
+        "affects_gather_marches": true
+      },
+      "fusion_partner": "scorpion",
+      "fusion_result": "nest",
+      "flavor": "Web set. Now we wait."
+    },
+    {
+      "id": "longhorn",
+      "name": "Longhorn Bull",
+      "icon": "🦬",
+      "rarity": "rare",
+      "drop_grades": [3],
+      "drop_weight": 9,
+      "gather_trips_required": 0,
+      "target": "rally",
+      "duration_seconds": 1800,
+      "effects": {
+        "rally_capacity_bonus": 0.10,
+        "first_round_attack_bonus": 0.25,
+        "applies_to_next_rally": true
+      },
+      "flavor": "The herd doesn't stop."
+    },
+    {
+      "id": "firefly",
+      "name": "Firefly",
+      "icon": "✨",
+      "rarity": "rare",
+      "drop_grades": [2, 3],
+      "drop_weight": 8,
+      "server_time_restriction": { "from_hour": 22, "to_hour": 6 },
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": -1,
+      "effects": {
+        "gather_marches_invisible": true,
+        "lasts_until_gather_returns": true,
+        "night_only": true
+      },
+      "fusion_partner": "mosquito_swarm",
+      "fusion_result": "night_horde",
+      "flavor": "They only come out at night."
+    },
+    {
+      "id": "eagle_eye",
+      "name": "Eagle Eye",
+      "icon": "🦅",
+      "rarity": "rare",
+      "drop_grades": [3],
+      "drop_weight": 7,
+      "gather_trips_required": 0,
+      "target": "player_or_alliance",
+      "duration_seconds": 0,
+      "effects": {
+        "reveals_troop_count": true,
+        "reveals_troop_types": true,
+        "reveals_active_buffs": true,
+        "reveals_creature_caches": true,
+        "reveals_gather_positions": true,
+        "countered_by_stallion_blur": true,
+        "single_use": true
+      },
+      "fusion_partner": "prairie_dog",
+      "fusion_result": "full_recon",
+      "flavor": "The sky sees everything."
+    },
+    {
+      "id": "wild_stallion",
+      "name": "Wild Stallion",
+      "icon": "🐴",
+      "rarity": "uncommon",
+      "drop_grades": [2, 3],
+      "drop_weight": 17,
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": 900,
+      "effects": {
+        "march_speed_bonus": 0.60,
+        "map_icon_blurred": true,
+        "troop_count_hidden": true,
+        "troop_type_hidden": true,
+        "blocks_eagle_eye": true
+      },
+      "flavor": "Nobody catches a frontier horse."
+    },
+    {
+      "id": "grizzly_shield",
+      "name": "Grizzly Shield",
+      "icon": "🐻",
+      "rarity": "rare",
+      "drop_grades": [3],
+      "drop_weight": 8,
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": -1,
+      "effects": {
+        "passive": true,
+        "single_use": true,
+        "must_preactivate": true,
+        "incoming_attack_loss_reduction": 0.30
+      },
+      "flavor": "You hit the bear. The bear doesn't move."
+    },
+    {
+      "id": "bison_stampede",
+      "name": "Bison Stampede",
+      "icon": "🦬",
+      "rarity": "rare",
+      "drop_grades": [3],
+      "drop_weight": 7,
+      "gather_trips_required": 0,
+      "target": "tile",
+      "duration_seconds": 0,
+      "effects": {
+        "cancels_enemy_gather_marches": true,
+        "sends_marches_home": true,
+        "zero_troop_damage": true,
+        "displacement_only": true
+      },
+      "flavor": "You don't outrun the herd."
+    },
+    {
+      "id": "jackalope",
+      "name": "Jackalope",
+      "icon": "🐰",
+      "rarity": "rare",
+      "drop_grades": [2, 3],
+      "drop_weight": 6,
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": 0,
+      "effects": {
+        "random_pool": [
+          { "id": "gold_double",   "desc": "Double Gold Dust for 1 hour",          "weight": 25 },
+          { "id": "march_scatter", "desc": "All gather marches teleport randomly",  "weight": 20 },
+          { "id": "gift_cache",    "desc": "Random Cache sent to alliance member",  "weight": 25 },
+          { "id": "self_swarm",    "desc": "Mosquito Swarm hits yourself",          "weight": 15 },
+          { "id": "legend_taste",  "desc": "Temporary Legendary ability, 10 min",  "weight": 15 }
+        ],
+        "reveal_delay_seconds": 60
+      },
+      "flavor": "Nobody knows what this does. That's the point."
+    },
+    {
+      "id": "thunderbird",
+      "name": "Thunderbird",
+      "icon": "⚡",
+      "rarity": "legendary",
+      "drop_grades": [3],
+      "drop_weight": 2,
+      "gather_trips_required": 0,
+      "target": "alliance",
+      "duration_seconds": 1200,
+      "effects": {
+        "interrupts_all_gathers": true,
+        "march_speed_reduction": 0.50,
+        "server_announcement": true,
+        "hides_activator_identity": true
+      },
+      "flavor": "The sky breaks open."
+    },
+    {
+      "id": "ghost_horse",
+      "name": "Ghost Horse",
+      "icon": "🌫",
+      "rarity": "legendary",
+      "drop_grades": [3],
+      "drop_weight": 1,
+      "gather_trips_required": 0,
+      "target": "self",
+      "duration_seconds": -1,
+      "effects": {
+        "next_marches_invisible": 3,
+        "no_warning_fires": true,
+        "bypasses_prairie_dog": true,
+        "bypasses_eagle_eye": true
+      },
+      "flavor": "Nobody tracked it. Nobody stopped it."
+    },
+    {
+      "id": "diamondback",
+      "name": "The Diamondback",
+      "icon": "🐍",
+      "rarity": "legendary",
+      "drop_grades": [3],
+      "drop_weight": 1,
+      "gather_trips_required": 0,
+      "target": "player",
+      "duration_seconds": 0,
+      "effects": {
+        "rattlesnake_effect": true,
+        "scorpion_effect": true,
+        "tarantula_effect": true,
+        "combined_lock_duration_seconds": 1200
+      },
+      "flavor": "Older than the frontier."
+    }
+  ],
+  "fusions": [
+    {
+      "id": "phantom_bite",
+      "requires": ["rattlesnake", "coyote"],
+      "window_seconds": 60,
+      "same_target": true,
+      "effect": "Debuff lands AND target sees a false all-clear — does not know they are slowed."
+    },
+    {
+      "id": "nest",
+      "requires": ["scorpion", "tarantula"],
+      "window_seconds": 60,
+      "same_tile": true,
+      "effect": "Tile is booby-trapped AND webbed simultaneously. Double punishment on entry."
+    },
+    {
+      "id": "night_horde",
+      "requires": ["mosquito_swarm", "firefly"],
+      "window_seconds": 60,
+      "same_window": true,
+      "effect": "Horde activates with no 3-minute smoke signal warning. Completely silent."
+    },
+    {
+      "id": "full_recon",
+      "requires": ["prairie_dog", "eagle_eye"],
+      "window_seconds": 60,
+      "same_alliance": true,
+      "effect": "Reveals all creature caches held by target alliance AND all march details simultaneously."
+    }
+  ],
+  "power_brackets": [
+    { "id": "pioneer",    "label": "Pioneer",    "min": 0,           "max": 10000000,  "small_player_gather_multiplier": 1.5, "multiplier_min_trips": 8 },
+    { "id": "ranger",     "label": "Ranger",     "min": 10000001,    "max": 50000000,  "small_player_gather_multiplier": 1.0 },
+    { "id": "gunslinger", "label": "Gunslinger", "min": 50000001,    "max": 200000000, "small_player_gather_multiplier": 1.0 },
+    { "id": "warlord",    "label": "Warlord",    "min": 200000001,   "max": null,      "small_player_gather_multiplier": 1.0 }
+  ]
+}

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Great Frontier Gambit — UI Prototype</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:          #0a0500;
+    --panel:       #160900;
+    --border:      #3a1f00;
+    --border-hi:   #6b3a1f;
+    --gold:        #c4920a;
+    --gold-hi:     #f0c040;
+    --gold-lo:     #6a4a08;
+    --parch:       #f5e6c8;
+    --parch-dim:   #a09060;
+    --red:         #cc2200;
+    --red-dk:      #4a0000;
+    --green:       #2d7a2d;
+    --green-hi:    #80c040;
+    --purple:      #8030c0;
+    --sky:         #1a3555;
+}
+
+body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--parch);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+}
+
+/* ── MAIN SHELL ───────────────────────────────────── */
+.shell {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ── HEADER ───────────────────────────────────────── */
+.header {
+    background: linear-gradient(180deg, #2a1200 0%, var(--panel) 100%);
+    border-bottom: 2px solid var(--gold-lo);
+    padding: 10px 20px 8px;
+    text-align: center;
+    position: relative;
+}
+.header::before, .header::after {
+    content: '✦'; position: absolute;
+    color: var(--gold); font-size: 11px; top: 14px;
+}
+.header::before { left: 14px; }
+.header::after  { right: 14px; }
+.header-title {
+    font-size: 17px; font-weight: bold; letter-spacing: 3px;
+    color: var(--gold-hi);
+    text-shadow: 0 0 14px rgba(240,192,64,.45);
+    text-transform: uppercase;
+}
+.header-sub {
+    font-size: 10px; letter-spacing: 2px;
+    color: var(--parch-dim); margin-top: 2px;
+}
+
+/* ── STATS BAR ────────────────────────────────────── */
+.stats {
+    display: grid; grid-template-columns: 1fr 1px 1fr;
+    background: var(--border); gap: 1px;
+    border-bottom: 1px solid var(--border);
+}
+.stats-div { background: var(--border); }
+.stat {
+    background: var(--panel);
+    padding: 9px 14px;
+    display: flex; flex-direction: column; align-items: center;
+}
+.stat-lbl { font-size: 9px; color: var(--parch-dim); letter-spacing: 2px; text-transform: uppercase; }
+.stat-val {
+    font-size: 24px; font-weight: bold; line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    transition: color .2s;
+}
+.stat-val.gd  { color: var(--gold-hi); }
+.stat-val.bt  { color: #e07820; }
+.stat-chg { font-size: 10px; min-height: 14px; color: var(--green-hi); }
+
+/* ── FLASHPOINT PANEL ─────────────────────────────── */
+.fp-panel {
+    margin: 8px; padding: 10px 14px;
+    background: linear-gradient(135deg, #180400, #1e0600);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    border-radius: 5px; cursor: pointer;
+    transition: box-shadow .2s;
+}
+.fp-panel:hover { box-shadow: 0 0 8px rgba(204,34,0,.25); }
+.fp-panel.live  { border-left-color: var(--gold); }
+.fp-panel.warn  { border-left-color: var(--gold-hi); animation: warn-pulse 1.2s infinite; }
+@keyframes warn-pulse {
+    0%,100% { box-shadow: none; }
+    50%      { box-shadow: 0 0 10px rgba(240,192,64,.35); }
+}
+.fp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.fp-badge {
+    font-size: 9px; font-weight: bold; letter-spacing: 2px;
+    padding: 2px 8px; border-radius: 10px; background: var(--red); color: #fff;
+}
+.fp-badge.live { animation: blink 2s infinite; }
+.fp-badge.idle { background: #2a2a2a; color: #555; }
+.fp-badge.warn { background: #5a4000; color: var(--gold-hi); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.65} }
+.fp-timer { font-size: 13px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.fp-name  { font-size: 15px; font-weight: bold; color: var(--parch); letter-spacing: 1px; }
+.fp-bar   { height: 4px; background: #200800; border-radius: 2px; overflow: hidden; margin-top: 7px; }
+.fp-fill  {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--red), var(--gold));
+    transition: width 1s linear;
+}
+
+/* ── MAP ──────────────────────────────────────────── */
+.map-wrap {
+    margin: 0 8px 0;
+    border: 1px solid var(--border); border-radius: 5px;
+    overflow: hidden;
+    background: #080300;
+}
+.map-hdr {
+    padding: 5px 12px; font-size: 9px; letter-spacing: 2px;
+    color: var(--parch-dim); background: #120600;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+}
+.map-grid {
+    display: grid; grid-template-columns: repeat(9,1fr);
+    gap: 2px; padding: 8px;
+}
+.tile {
+    aspect-ratio: 1; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; cursor: pointer; transition: transform .12s;
+    border: 1px solid transparent;
+}
+.tile:hover { transform: scale(1.18); z-index: 5; position: relative; }
+.tile.empty    { background: #130800; }
+.tile.g1       { background: #0f2008; border-color: #1c3a0a; }
+.tile.g2       { background: #153008; border-color: #2a5a10; }
+.tile.g3       { background: #1a4200; border-color: #3a7a14; }
+.tile.mine     { background: #003525; border-color: var(--green); }
+.tile.enemy    { background: #1a0030; border-color: #5020a0; }
+.tile.hot      { background: #280800; border-color: var(--red); animation: hot-pulse 1.4s infinite; }
+.tile.standoff { background: #2a1800; border: 2px solid var(--gold-hi); animation: sf-glow 1s infinite; }
+.tile.outlaw   { background: #300000; border-color: #ff2000; animation: hot-pulse 1s infinite; }
+@keyframes hot-pulse {
+    0%,100%{ border-color: var(--red); }
+    50%    { border-color: #ff5030; box-shadow: 0 0 5px rgba(255,60,0,.4); }
+}
+@keyframes sf-glow {
+    0%,100%{ box-shadow: 0 0 4px rgba(240,192,64,.4); }
+    50%    { box-shadow: 0 0 12px rgba(240,192,64,.85); }
+}
+
+/* ── CREATURES ────────────────────────────────────── */
+.creatures-wrap {
+    margin: 8px; padding: 10px;
+    background: #120700;
+    border: 1px solid var(--border); border-radius: 5px;
+}
+.sec-lbl { font-size: 9px; letter-spacing: 2px; color: var(--parch-dim); text-transform: uppercase; margin-bottom: 8px; }
+.creature-slots { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.cslot {
+    aspect-ratio: 1; border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .18s; position: relative;
+    border: 1px solid var(--border); background: #0c0400;
+}
+.cslot:hover     { transform: translateY(-2px); border-color: var(--gold-lo); }
+.cslot.common    { border-color: #5a3a14; }
+.cslot.uncommon  { border-color: #5a5030; }
+.cslot.rare      { border-color: #3a6014; }
+.cslot.legendary { border-color: #5a1880; animation: leg-shimmer 3s infinite; }
+.cslot.empty     { border-style: dashed; opacity: .3; cursor: default; pointer-events: none; }
+@keyframes leg-shimmer {
+    0%,100%{ border-color: #5a1880; box-shadow: 0 0 4px rgba(130,40,180,.3); }
+    50%    { border-color: #9050d0; box-shadow: 0 0 14px rgba(130,40,180,.65); }
+}
+.c-icon { font-size: 28px; line-height: 1; }
+.c-name { font-size: 8px; color: var(--parch-dim); margin-top: 3px; text-align: center; }
+.rarity-dot {
+    position: absolute; top: 4px; right: 4px;
+    width: 6px; height: 6px; border-radius: 50%;
+}
+.rd-common   { background: #9a6020; }
+.rd-uncommon { background: #9a9050; }
+.rd-rare     { background: #509020; }
+.rd-legendary{ background: var(--purple); box-shadow: 0 0 5px var(--purple); }
+
+/* ── HORDE METER ──────────────────────────────────── */
+.horde-wrap {
+    margin: 0 8px 8px; padding: 10px 12px;
+    background: #080f00;
+    border: 1px solid #1a2800;
+    border-left: 3px solid #3a5000;
+    border-radius: 5px;
+}
+.horde-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.horde-title { font-size: 11px; font-weight: bold; color: var(--green-hi); letter-spacing: 1px; }
+.horde-count { font-size: 13px; color: var(--parch); }
+.horde-bar   { height: 8px; background: #141f00; border-radius: 4px; overflow: hidden; }
+.horde-fill  {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, #2a5000, var(--green-hi));
+    transition: width .5s ease; position: relative; overflow: hidden;
+}
+.horde-fill::after {
+    content: ''; position: absolute;
+    top: 0; right: 0; bottom: 0; width: 24px;
+    background: linear-gradient(90deg, transparent, rgba(180,255,80,.4));
+    animation: hs 1.5s infinite;
+}
+@keyframes hs { 0%,100%{opacity:0} 50%{opacity:1} }
+.horde-segs  { display: flex; gap: 6px; margin-top: 5px; }
+.hseg {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #1e2e00; transition: all .3s;
+}
+.hseg.on   { background: var(--green-hi); box-shadow: 0 0 5px rgba(128,192,64,.5); }
+.hseg.full { background: #c8ff00; box-shadow: 0 0 9px rgba(200,255,0,.8); animation: hsp .5s infinite; }
+@keyframes hsp { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35)} }
+.horde-status { font-size: 10px; color: var(--parch-dim); margin-top: 5px; }
+
+/* ── LEADERBOARD ──────────────────────────────────── */
+.lb-wrap {
+    margin: 0 8px 8px; padding: 10px;
+    background: #120700;
+    border: 1px solid var(--border); border-radius: 5px;
+}
+.bracket-pill {
+    display: inline-block; font-size: 9px; letter-spacing: 1px;
+    padding: 2px 10px; border-radius: 10px; margin-bottom: 8px;
+    background: #200e00; color: var(--gold);
+    border: 1px solid var(--gold-lo);
+}
+.lb-row {
+    display: grid; grid-template-columns: 26px 1fr auto;
+    gap: 8px; align-items: center;
+    padding: 5px 4px; border-radius: 3px;
+    font-size: 12px; transition: background .15s;
+}
+.lb-row:hover { background: #1e0e00; }
+.lb-row.me    { background: #0a1e08; border: 1px solid #2a4010; }
+.lb-rank      { font-size: 11px; color: var(--parch-dim); text-align: center; }
+.lb-rank.t3   { color: var(--gold); font-weight: bold; }
+.lb-name      { color: var(--parch); }
+.lb-name.me   { color: var(--green-hi); }
+.lb-score     { color: var(--gold); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* ── DEMO CONTROLS ────────────────────────────────── */
+.demo-wrap {
+    margin: 0 8px 12px; padding: 10px;
+    background: #070307;
+    border: 1px dashed #28143a; border-radius: 5px;
+}
+.demo-lbl  { font-size: 9px; color: #3a2050; letter-spacing: 2px; text-align: center; margin-bottom: 8px; }
+.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dbtn {
+    padding: 9px 4px; font-size: 10px; letter-spacing: 1px;
+    background: #140820; border: 1px solid #4a2070; color: #c080ff;
+    font-family: Georgia, serif; border-radius: 4px;
+    cursor: pointer; text-align: center; transition: all .15s;
+}
+.dbtn:hover  { background: #200a34; border-color: #8045c0; color: #fff; }
+.dbtn:active { transform: scale(.97); }
+
+/* ── OVERLAYS ─────────────────────────────────────── */
+.overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    pointer-events: none; opacity: 0;
+    transition: opacity .35s, background .35s;
+}
+.overlay.on { pointer-events: all; opacity: 1; }
+
+/* FLASHPOINT REVEAL */
+.fp-ov     { background: rgba(0,0,0,0); }
+.fp-ov.on  { background: rgba(0,0,0,.93); }
+.fp-ov-box {
+    text-align: center; padding: 0 24px;
+    transform: scale(.5); opacity: 0;
+    transition: all .45s cubic-bezier(.34,1.56,.64,1);
+}
+.fp-ov.on .fp-ov-box { transform: scale(1); opacity: 1; }
+.fp-ov-eyebrow { font-size: 10px; letter-spacing: 4px; color: var(--red); margin-bottom: 8px; }
+.fp-ov-name    { font-size: 38px; font-weight: bold; color: var(--gold-hi); letter-spacing: 2px; line-height: 1.1; text-shadow: 0 0 24px rgba(240,192,64,.55); }
+.fp-ov-desc    { font-size: 13px; color: var(--parch); max-width: 280px; margin: 12px auto; line-height: 1.6; }
+.fp-ov-dur-lbl { font-size: 9px; letter-spacing: 3px; color: var(--parch-dim); margin-top: 16px; }
+.fp-ov-dur-val { font-size: 30px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.fp-ov-hint    { font-size: 10px; color: var(--parch-dim); margin-top: 18px; letter-spacing: 1px; }
+.particles     { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.pt {
+    position: absolute; border-radius: 50%;
+    animation: pt-rise var(--dur,2s) var(--delay,0s) ease-out forwards;
+}
+@keyframes pt-rise {
+    0%  { transform: translate(0,0) scale(1); opacity: 1; }
+    100%{ transform: translate(var(--tx,0px), var(--ty,-400px)) scale(0); opacity: 0; }
+}
+
+/* CACHE REVEAL */
+.cache-ov { background: rgba(0,0,0,0); gap: 0; }
+.cache-ov.on { background: rgba(0,0,0,.9); }
+.bag-wrap { display: flex; flex-direction: column; align-items: center; }
+.bag {
+    font-size: 80px; cursor: pointer; line-height: 1;
+    transform: scale(0); opacity: 0;
+    transition: all .4s cubic-bezier(.34,1.56,.64,1);
+    filter: drop-shadow(0 0 18px rgba(200,150,20,.55));
+}
+.cache-ov.on .bag { transform: scale(1); opacity: 1; }
+.bag.shake { animation: bag-shake .55s ease-in-out; }
+@keyframes bag-shake {
+    0%,100%{ transform: scale(1) rotate(0); }
+    20%    { transform: scale(1.06) rotate(-6deg); }
+    40%    { transform: scale(1.06) rotate(6deg); }
+    60%    { transform: scale(1.06) rotate(-3deg); }
+    80%    { transform: scale(1.06) rotate(3deg); }
+}
+.bag-hint { font-size: 10px; letter-spacing: 2px; color: var(--parch-dim); margin-top: 10px; animation: hint-blink 2s .8s infinite; }
+@keyframes hint-blink { 0%,100%{opacity:.3} 50%{opacity:.85} }
+.cache-result {
+    text-align: center; display: none;
+    flex-direction: column; align-items: center; padding: 0 20px;
+    transform: scale(0); opacity: 0;
+    transition: all .5s cubic-bezier(.34,1.56,.64,1);
+}
+.cache-result.show { display: flex; transform: scale(1); opacity: 1; }
+.r-icon  { font-size: 82px; animation: c-enter .55s cubic-bezier(.34,1.56,.64,1); filter: drop-shadow(0 0 18px rgba(200,100,40,.8)); }
+@keyframes c-enter {
+    0%  { transform: scale(0) rotate(-22deg); opacity: 0; }
+    100%{ transform: scale(1) rotate(0); opacity: 1; }
+}
+.r-name   { font-size: 26px; font-weight: bold; color: var(--gold-hi); margin-top: 6px; }
+.r-rarity { font-size: 9px; letter-spacing: 3px; padding: 3px 12px; border-radius: 10px; margin-top: 4px; color: #fff; }
+.r-desc   { font-size: 12px; color: var(--parch); max-width: 270px; margin: 10px auto; line-height: 1.55; font-style: italic; }
+.r-btn    {
+    margin-top: 18px; padding: 10px 28px;
+    background: #150900; border: 1px solid var(--gold-lo);
+    color: var(--gold); font-family: Georgia,serif; font-size: 12px;
+    letter-spacing: 2px; border-radius: 5px; cursor: pointer; transition: all .18s;
+}
+.r-btn:hover { background: #250f00; border-color: var(--gold); }
+
+/* HORDE */
+.horde-ov { background: rgba(0,10,0,0); }
+.horde-ov.on { background: rgba(0,10,0,.93); }
+.horde-box {
+    text-align: center; padding: 0 24px;
+    transform: scale(.3); opacity: 0;
+    transition: all .5s cubic-bezier(.34,1.56,.64,1);
+}
+.horde-ov.on .horde-box { transform: scale(1); opacity: 1; }
+.h-swarm  { font-size: 56px; display: block; animation: buzz .25s infinite; }
+@keyframes buzz { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-2px,1px)} 75%{transform:translate(2px,-1px)} }
+.h-title  { font-size: 34px; font-weight: bold; color: #c0ff00; letter-spacing: 2px; margin-top: 6px; text-shadow: 0 0 22px rgba(160,255,0,.6); }
+.h-target { font-size: 13px; color: var(--parch); margin-top: 6px; }
+.h-effects{
+    margin-top: 16px; padding: 12px 16px;
+    background: rgba(0,30,0,.55);
+    border: 1px solid #2a5000; border-radius: 6px;
+    text-align: left;
+}
+.h-eff { font-size: 12px; color: var(--green-hi); padding: 3px 0; }
+.h-dismiss { font-size: 10px; color: #3a5010; margin-top: 14px; letter-spacing: 1px; }
+
+/* WINNER SCREEN */
+.win-ov { background: rgba(0,0,0,0); }
+.win-ov.on { background: rgba(0,0,0,.96); }
+.win-box {
+    text-align: center; padding: 0 24px;
+    transform: scale(.3) translateY(40px); opacity: 0;
+    transition: all .6s cubic-bezier(.34,1.56,.64,1);
+}
+.win-ov.on .win-box { transform: scale(1) translateY(0); opacity: 1; }
+.win-medal { font-size: 72px; animation: medal-drop .6s .2s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes medal-drop {
+    0%  { transform: translateY(-60px) scale(.4); opacity: 0; }
+    100%{ transform: translateY(0) scale(1);      opacity: 1; }
+}
+.win-title { font-size: 32px; font-weight: bold; color: var(--gold-hi); letter-spacing: 2px; margin-top: 8px; text-shadow: 0 0 24px rgba(240,192,64,.6); }
+.win-bracket { font-size: 12px; color: var(--gold); letter-spacing: 2px; margin-top: 6px; }
+.win-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin: 20px 0;
+}
+.win-stat { background: rgba(20,10,0,.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px; }
+.win-stat-lbl { font-size: 9px; letter-spacing: 2px; color: var(--parch-dim); }
+.win-stat-val { font-size: 22px; font-weight: bold; color: var(--gold-hi); }
+.win-title-earned { font-size: 13px; color: var(--green-hi); margin-top: 8px; border: 1px solid var(--green); border-radius: 4px; padding: 6px 14px; display: inline-block; }
+.win-close { margin-top: 20px; padding: 10px 28px; background: #150900; border: 1px solid var(--gold-lo); color: var(--gold); font-family: Georgia,serif; font-size: 12px; letter-spacing: 2px; border-radius: 5px; cursor: pointer; }
+.win-close:hover { background: #250f00; }
+
+/* STORM BANNER */
+.storm {
+    position: fixed; top: -58px; left: 0; right: 0; z-index: 200;
+    background: linear-gradient(135deg, #281200, #170900);
+    border-bottom: 2px solid var(--gold);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    transition: top .4s cubic-bezier(.34,1.56,.64,1);
+}
+.storm.on { top: 0; }
+.storm-txt { font-size: 14px; font-weight: bold; color: var(--gold-hi); letter-spacing: 2px; }
+.storm-ico { font-size: 20px; animation: spin 2.2s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* TOAST */
+.toast {
+    position: fixed; bottom: -70px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--red-dk); border: 1px solid var(--red);
+    color: var(--parch); padding: 10px 18px;
+    border-radius: 6px; font-size: 11px; z-index: 150;
+    transition: bottom .3s; white-space: nowrap;
+}
+.toast.on { bottom: 18px; }
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- STORM WARNING -->
+<div class="storm" id="storm">
+  <span class="storm-ico">⚡</span>
+  <span class="storm-txt">STORM'S COMING...</span>
+  <span class="storm-ico">⚡</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title">FRONTIER GAMBIT</div>
+    <div class="header-sub">PHASE 3 · THE RECKONING · DAY 4 OF 5</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-lbl">⚱ Gold Dust</div>
+      <div class="stat-val gd" id="goldVal">48,291</div>
+      <div class="stat-chg" id="goldChg"></div>
+    </div>
+    <div class="stats-div"></div>
+    <div class="stat">
+      <div class="stat-lbl">🎯 Bounty Tokens</div>
+      <div class="stat-val bt" id="btVal">12,847</div>
+      <div class="stat-chg" id="btChg"></div>
+    </div>
+  </div>
+
+  <!-- FLASHPOINT -->
+  <div class="fp-panel live" id="fpPanel" onclick="showFpReveal()">
+    <div class="fp-top">
+      <span class="fp-badge live" id="fpBadge">● LIVE</span>
+      <span class="fp-timer" id="fpTimer">18:42</span>
+    </div>
+    <div class="fp-name" id="fpName">⚔ THE STANDOFF</div>
+    <div class="fp-bar"><div class="fp-fill" id="fpFill" style="width:62%"></div></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-wrap">
+    <div class="map-hdr">
+      <span>THE FRONTIER MAP</span>
+      <span>⬛ Empty &nbsp; 🟩 Grade 1–3 &nbsp; ⭐ Standoff</span>
+    </div>
+    <div class="map-grid" id="mapGrid"></div>
+  </div>
+
+  <!-- CREATURES -->
+  <div class="creatures-wrap">
+    <div class="sec-lbl">🎒 Creature Cache Inventory (3 slots)</div>
+    <div class="creature-slots" id="cSlots"></div>
+  </div>
+
+  <!-- HORDE METER -->
+  <div class="horde-wrap">
+    <div class="horde-top">
+      <span class="horde-title">🦟 ALLIANCE HORDE METER</span>
+      <span class="horde-count"><span id="hCount">4</span>/5</span>
+    </div>
+    <div class="horde-bar"><div class="horde-fill" id="hFill" style="width:80%"></div></div>
+    <div class="horde-segs" id="hSegs"></div>
+    <div class="horde-status" id="hStatus">One more swarm needed — Horde imminent</div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="lb-wrap">
+    <div class="sec-lbl">📋 Pioneer Bracket Standings</div>
+    <div class="bracket-pill">⭐ PIONEER BRACKET · Your Division</div>
+    <div id="lb"></div>
+  </div>
+
+  <!-- DEMO CONTROLS -->
+  <div class="demo-wrap">
+    <div class="demo-lbl">◆ PROTOTYPE DEMO — TAP TO SEE EACH MOMENT ◆</div>
+    <div class="demo-grid">
+      <div class="dbtn" onclick="showFpReveal()">⚡ Flashpoint Reveal</div>
+      <div class="dbtn" onclick="showCache()">🎒 Open Cache Bag</div>
+      <div class="dbtn" onclick="fireHorde()">🦟 Horde Triggers</div>
+      <div class="dbtn" onclick="showStorm()">🌩 Storm Warning</div>
+      <div class="dbtn" onclick="doGather()">⛏ Gather Score</div>
+      <div class="dbtn" onclick="showWin()">🏆 Winner Screen</div>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<!-- FLASHPOINT REVEAL OVERLAY -->
+<div class="overlay fp-ov" id="fpOv" onclick="closeFpOv()">
+  <div class="particles" id="particles"></div>
+  <div class="fp-ov-box">
+    <div class="fp-ov-eyebrow">⚡ FLASHPOINT ACTIVATED ⚡</div>
+    <div class="fp-ov-name" id="fpOvName">THE STANDOFF</div>
+    <div class="fp-ov-desc" id="fpOvDesc">Hold the marked tile when time runs out. Every 5 minutes uncontested builds your Pressure Stack.</div>
+    <div class="fp-ov-dur-lbl">DURATION</div>
+    <div class="fp-ov-dur-val" id="fpOvDur">28:00</div>
+    <div class="fp-ov-hint">— Tap anywhere to dismiss —</div>
+  </div>
+</div>
+
+<!-- CACHE REVEAL OVERLAY -->
+<div class="overlay cache-ov" id="cacheOv">
+  <div class="bag-wrap" id="bagWrap">
+    <div class="bag" id="bag" onclick="openBag()">🟤</div>
+    <div class="bag-hint">TAP TO OPEN</div>
+  </div>
+  <div class="cache-result" id="cResult">
+    <div class="r-icon" id="rIcon">🐍</div>
+    <div class="r-name" id="rName">Rattlesnake</div>
+    <div class="r-rarity" id="rRarity">COMMON</div>
+    <div class="r-desc" id="rDesc">"Silent bite. No warning." — Slows target 40% gather / 25% march for 10 minutes. Completely untraceable.</div>
+    <button class="r-btn" onclick="closeCache()">ADD TO INVENTORY</button>
+  </div>
+</div>
+
+<!-- HORDE OVERLAY -->
+<div class="overlay horde-ov" id="hordeOv" onclick="closeHorde()">
+  <div class="horde-box">
+    <span class="h-swarm">🦟🦟🦟🦟🦟</span>
+    <div class="h-title">HORDE UNLEASHED</div>
+    <div class="h-target">Target: Iron Ridge Alliance</div>
+    <div class="h-effects">
+      <div class="h-eff">⬇ −35% Alliance Defense · 20 minutes</div>
+      <div class="h-eff">⬇ −20% Gather Speed · 20 minutes</div>
+      <div class="h-eff">⬆ +15% Bounty Tokens vs. target</div>
+      <div class="h-eff">⚠ 3-min smoke signal warning fired</div>
+    </div>
+    <div class="h-dismiss">Tap to dismiss</div>
+  </div>
+</div>
+
+<!-- WINNER SCREEN -->
+<div class="overlay win-ov" id="winOv">
+  <div class="win-box">
+    <div class="win-medal">🏆</div>
+    <div class="win-title">BRACKET CHAMPION</div>
+    <div class="win-bracket">PIONEER DIVISION · SERVER: RED ROCK CANYON</div>
+    <div class="win-stats">
+      <div class="win-stat">
+        <div class="win-stat-lbl">GOLD DUST</div>
+        <div class="win-stat-val">61,847</div>
+      </div>
+      <div class="win-stat">
+        <div class="win-stat-lbl">BOUNTY TOKENS</div>
+        <div class="win-stat-val">18,240</div>
+      </div>
+      <div class="win-stat">
+        <div class="win-stat-lbl">FINAL SCORE</div>
+        <div class="win-stat-val">89,207</div>
+      </div>
+      <div class="win-stat">
+        <div class="win-stat-lbl">FLASHPOINTS</div>
+        <div class="win-stat-val">8 of 11</div>
+      </div>
+    </div>
+    <div class="win-title-earned">🌟 Title Earned: "Held the Line"</div>
+    <button class="win-close" onclick="closeWin()">CLAIM REWARDS</button>
+  </div>
+</div>
+
+<script>
+/* ─── DATA ───────────────────────────────────────────── */
+const FLASHPOINTS = [
+  { name:"THE STANDOFF",      desc:"Hold the marked tile when time runs out. Every 5 minutes uncontested builds your Pressure Stack — stacks multiply your final payout.", dur:"28:00" },
+  { name:"BOUNTY BLITZ",      desc:"All Bounty Token rewards tripled for the full duration. Every bounty task you've been saving for — now is the time.", dur:"22:00" },
+  { name:"GOLD CONVOY",       desc:"A convoy moves across the frontier. Rally and hit it. Every alliance that lands damage earns a proportional share of the jackpot.", dur:"35:00" },
+  { name:"SHERIFF'S CHASE",   desc:"Three Outlaw Marked players are revealed on the map with full coordinates. Zero them for massive Bounty Token payouts.", dur:"25:00" },
+  { name:"LAST STAND",        desc:"Defending earns points now. Every failed attack on your city pays Bounty Tokens based on attacker losses.", dur:"30:00" },
+  { name:"THE NIGHT RIDE",    desc:"Grade II and III tiles pay double Gold Dust. Firefly users gather without appearing on the map. Off-peak players win here.", dur:"42:00" },
+  { name:"THE RECKONING",     desc:"Final flashpoint. Top 3 Gold Dust holders revealed. Unused creatures auto-convert at 50% value. Sprint or defend — choose now.", dur:"45:00" },
+];
+
+const CREATURES = [
+  { icon:"🐍", name:"Rattlesnake",    rarity:"common",    rc:"#8a5020", desc:'"Silent bite. No warning." — Slows gather 40% + march 25% for 10 min. Sender completely hidden.' },
+  { icon:"🦟", name:"Mosquito Swarm", rarity:"common",    rc:"#506020", desc:'"Tiny. Annoying. Unstoppable in numbers." — Solo: −8% defense. With 4 allies: HORDE activates.' },
+  { icon:"🦁", name:"Puma Frenzy",    rarity:"uncommon",  rc:"#8a7030", desc:'"Old frontier remembered." — +50% combat. Pounce eliminates 5% of lead troops before battle.' },
+  { icon:"🦂", name:"Scorpion",       rarity:"common",    rc:"#8a5020", desc:'"Touch my tile. I dare you." — Invisible tile trap. Next gather march takes 20% casualties.' },
+  { icon:"🦊", name:"Coyote",         rarity:"uncommon",  rc:"#8a7030", desc:'"You saw something. You saw nothing." — Ghost march to target. No troops. No damage. Pure panic.' },
+  { icon:"🦔", name:"Armadillo",      rarity:"common",    rc:"#8a5020", desc:'"Rolls up. Shrugs it off." — Blocks next Rattlesnake or Mosquito hit. Reveals sender.' },
+  { icon:"🦅", name:"Eagle Eye",      rarity:"rare",      rc:"#507020", desc:'"Sky sees everything." — Full intel: troop count, active buffs, all gather marches. Single scan.' },
+  { icon:"🐻", name:"Grizzly Shield", rarity:"rare",      rc:"#507020", desc:'"You hit the bear. Bear doesn\'t move." — Absorbs 30% of next incoming attack losses.' },
+  { icon:"🐴", name:"Wild Stallion",  rarity:"uncommon",  rc:"#8a7030", desc:'"Nobody catches a frontier horse." — +60% march speed, blurred icon on map for 15 min.' },
+  { icon:"🦬", name:"Bison Stampede", rarity:"rare",      rc:"#507020", desc:'"You don\'t outrun the herd." — Pushes enemy gather marches off any tile. Zero troop cost.' },
+  { icon:"🌩", name:"Thunderbird",    rarity:"legendary", rc:"#601890", desc:'"The sky breaks open." — Interrupts ALL enemy gathers. Slows ALL marches 50%. 20 min. Server-wide announce.' },
+  { icon:"🐰", name:"Jackalope",      rarity:"rare",      rc:"#507020", desc:'"Nobody knows what this does. That\'s the point." — Completely random effect. 60-second reveal delay.' },
+];
+
+const MAP_DATA = [
+  'g1','empty','g2','g3','empty','g1','g2','empty','g1',
+  'g1','mine','g1','g2','g1','hot','g1','g2','g1',
+  'g2','g1','standoff','g1','mine','g1','g2','g1','empty',
+  'empty','g1','g2','hot','g1','g3','g1','g2','g1',
+  'g1','g2','g1','g1','outlaw','g1','g2','g1','g2',
+  'g2','g1','mine','g2','g1','enemy','g1','g2','g1',
+  'g1','g2','g1','g1','g2','g1','g3','g1','empty',
+  'empty','g1','g2','g1','empty','g2','g1','g1','g1',
+];
+
+const TILE_ICONS = { empty:'', g1:'🟩', g2:'🟡', g3:'🌟', mine:'⛏', hot:'⚔', standoff:'⭐', outlaw:'🔴', enemy:'🟣' };
+
+const LB_DATA = [
+  { name:"Dusty_Rider",    score:61200, me:false },
+  { name:"ProspectorJoe",  score:54800, me:false },
+  { name:"YOU",            score:48291, me:true  },
+  { name:"Clem_1847",      score:41000, me:false },
+  { name:"GoldRushGreta",  score:38500, me:false },
+];
+
+/* ─── STATE ──────────────────────────────────────────── */
+const S = { gold:48291, bt:12847, horde:4, fpSec:1122, fpTotal:1680 };
+
+/* ─── RENDER ─────────────────────────────────────────── */
+function renderMap() {
+  const g = document.getElementById('mapGrid');
+  g.innerHTML = '';
+  MAP_DATA.forEach(t => {
+    const d = document.createElement('div');
+    d.className = `tile ${t}`;
+    d.textContent = TILE_ICONS[t] || '';
+    d.onclick = () => toast(`${TILE_ICONS[t]||'▪'} ${t.toUpperCase()} tile selected`);
+    g.appendChild(d);
+  });
+}
+
+function renderCreatures() {
+  const wrap = document.getElementById('cSlots');
+  wrap.innerHTML = '';
+  const inv = [CREATURES[0], CREATURES[6], null];
+  inv.forEach(c => {
+    const d = document.createElement('div');
+    if (c) {
+      d.className = `cslot ${c.rarity}`;
+      d.innerHTML = `<div class="c-icon">${c.icon}</div><div class="c-name">${c.name}</div><div class="rarity-dot rd-${c.rarity}"></div>`;
+      d.onclick = () => toast(`${c.icon} ${c.name} ready — tap a target to activate`);
+    } else {
+      d.className = 'cslot empty';
+      d.innerHTML = '<div class="c-icon" style="font-size:22px;opacity:.3">+</div>';
+    }
+    wrap.appendChild(d);
+  });
+}
+
+function renderLB() {
+  const wrap = document.getElementById('lb');
+  wrap.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  LB_DATA.forEach((p,i) => {
+    const d = document.createElement('div');
+    d.className = `lb-row${p.me?' me':''}`;
+    d.innerHTML = `
+      <div class="lb-rank${i<3?' t3':''}">${medals[i]||(i+1)}</div>
+      <div class="lb-name${p.me?' me':''}">${p.me?'▶ '+p.name:p.name}</div>
+      <div class="lb-score">${p.score.toLocaleString()}</div>`;
+    wrap.appendChild(d);
+  });
+}
+
+function renderHorde() {
+  document.getElementById('hCount').textContent = S.horde;
+  document.getElementById('hFill').style.width = `${(S.horde/5)*100}%`;
+  const segs = document.getElementById('hSegs');
+  segs.innerHTML = '';
+  for (let i=0;i<5;i++){
+    const d=document.createElement('div');
+    d.className=`hseg${i<S.horde?(S.horde>=5?' full':' on'):''}`;
+    segs.appendChild(d);
+  }
+  const st = document.getElementById('hStatus');
+  if (S.horde>=5){ st.textContent='🔥 HORDE READY — Awaiting Caller command'; st.style.color='#c8ff00'; }
+  else if (S.horde===4){ st.textContent='⚠ One more swarm needed — Horde imminent'; st.style.color=S.gold; }
+  else { st.textContent=`${5-S.horde} more swarms needed to trigger Horde`; st.style.color='var(--parch-dim)'; }
+}
+
+/* ─── FLASHPOINT TIMER ───────────────────────────────── */
+function tickFp() {
+  const m = Math.floor(S.fpSec/60), s = S.fpSec%60;
+  document.getElementById('fpTimer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  document.getElementById('fpFill').style.width = `${(S.fpSec/S.fpTotal)*100}%`;
+  if (S.fpSec>0) S.fpSec--;
+}
+
+/* ─── FLASHPOINT REVEAL ──────────────────────────────── */
+function showFpReveal() {
+  const fp = FLASHPOINTS[Math.floor(Math.random()*FLASHPOINTS.length)];
+  document.getElementById('fpOvName').textContent = fp.name;
+  document.getElementById('fpOvDesc').textContent = fp.desc;
+  document.getElementById('fpOvDur').textContent  = fp.dur;
+  document.getElementById('fpName').textContent   = '⚔ ' + fp.name;
+  spawnParticles();
+  document.getElementById('fpOv').classList.add('on');
+  setTimeout(closeFpOv, 9000);
+}
+function closeFpOv(){ document.getElementById('fpOv').classList.remove('on'); }
+
+function spawnParticles(){
+  const c = document.getElementById('particles');
+  c.innerHTML = '';
+  const colors = ['#f0c040','#ff8020','#ff4000','#ffffff','#ffcc60'];
+  for(let i=0;i<22;i++){
+    const p=document.createElement('div');
+    p.className='pt';
+    const tx=(Math.random()-.5)*260, ty=-(280+Math.random()*260);
+    const dur=(1.4+Math.random()*1.4).toFixed(2);
+    const delay=(Math.random()*.7).toFixed(2);
+    const size=3+Math.random()*5;
+    p.style.cssText=`left:${Math.random()*100}%;top:95%;width:${size}px;height:${size}px;background:${colors[i%colors.length]};--tx:${tx}px;--ty:${ty}px;--dur:${dur}s;--delay:${delay}s;`;
+    c.appendChild(p);
+  }
+}
+
+/* ─── CACHE REVEAL ───────────────────────────────────── */
+let bagOpen = false;
+function showCache(){
+  bagOpen = false;
+  const rarities = ['🟤','⬜','🟨','⬛'];
+  document.getElementById('bag').textContent = rarities[Math.floor(Math.random()*3)];
+  document.getElementById('bagWrap').style.display='flex';
+  const cr = document.getElementById('cResult');
+  cr.style.display='none'; cr.classList.remove('show');
+  document.getElementById('cacheOv').classList.add('on');
+  setTimeout(()=>{ const b=document.getElementById('bag'); b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),600); }, 900);
+  setTimeout(()=>{ const b=document.getElementById('bag'); b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),600); }, 1700);
+}
+function openBag(){
+  if(bagOpen) return; bagOpen=true;
+  const c = CREATURES[Math.floor(Math.random()*CREATURES.length)];
+  document.getElementById('bagWrap').style.display='none';
+  document.getElementById('rIcon').textContent = c.icon;
+  document.getElementById('rName').textContent = c.name;
+  const rr=document.getElementById('rRarity');
+  rr.textContent=c.rarity.toUpperCase();
+  rr.style.background=c.rc;
+  document.getElementById('rDesc').textContent=c.desc;
+  const cr=document.getElementById('cResult');
+  cr.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>cr.classList.add('show')));
+}
+function closeCache(){ document.getElementById('cacheOv').classList.remove('on'); bagOpen=false; }
+
+/* ─── HORDE ──────────────────────────────────────────── */
+function fireHorde(){
+  S.horde=5; renderHorde();
+  document.getElementById('hordeOv').classList.add('on');
+  setTimeout(()=>{ document.getElementById('hordeOv').classList.remove('on'); S.horde=0; renderHorde(); }, 5500);
+}
+function closeHorde(){ document.getElementById('hordeOv').classList.remove('on'); }
+
+/* ─── STORM WARNING ──────────────────────────────────── */
+function showStorm(){
+  document.getElementById('storm').classList.add('on');
+  setTimeout(()=>document.getElementById('storm').classList.remove('on'),4200);
+}
+
+/* ─── GATHER SCORE ───────────────────────────────────── */
+function doGather(){
+  const gain = 20+Math.floor(Math.random()*140);
+  S.gold += gain;
+  document.getElementById('goldVal').textContent=S.gold.toLocaleString();
+  const el=document.getElementById('goldChg');
+  el.textContent=`+${gain} ⛏ gathered`;
+  setTimeout(()=>el.textContent='',2200);
+  if(S.horde<4){ S.horde++; renderHorde(); }
+}
+
+/* ─── WINNER SCREEN ──────────────────────────────────── */
+function showWin(){ document.getElementById('winOv').classList.add('on'); }
+function closeWin(){ document.getElementById('winOv').classList.remove('on'); }
+
+/* ─── TOAST ──────────────────────────────────────────── */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),3200);
+}
+
+/* ─── SIMULATE BT DRIP ───────────────────────────────── */
+function btTick(){
+  if(Math.random()>.55){
+    const gain=10+Math.floor(Math.random()*40);
+    S.bt+=gain;
+    document.getElementById('btVal').textContent=S.bt.toLocaleString();
+    const el=document.getElementById('btChg');
+    el.textContent=`+${gain} bounty`;
+    el.style.color='#e07820';
+    setTimeout(()=>el.textContent='',2000);
+  }
+}
+
+/* ─── INIT ───────────────────────────────────────────── */
+renderMap();
+renderCreatures();
+renderLB();
+renderHorde();
+setInterval(tickFp, 1000);
+setInterval(btTick, 9000);
+</script>
+</body>
+</html>
