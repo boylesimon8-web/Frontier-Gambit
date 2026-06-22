@@ -624,9 +624,12 @@ function renderStats() {
 }
 
 // ── TIMER RENDER ──────────────────────────────────────
+let _lastTimerSec = -1;
 function renderTimer() {
   const m = Math.floor(G.timeLeft / 60);
   const s = Math.floor(G.timeLeft % 60);
+  if (m * 60 + s === _lastTimerSec) return; // skip if displayed second hasn't changed
+  _lastTimerSec = m * 60 + s;
   const el = document.getElementById('gTimer');
   el.textContent = m + ':' + String(s).padStart(2,'0');
   if (G.timeLeft <= 60) el.classList.add('urgent');
