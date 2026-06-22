@@ -83,19 +83,19 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.6}}
 
 /* map */
-.map-wrap{margin:0 6px;border:1px solid var(--border);border-radius:4px;overflow:hidden;}
-.map-hdr{padding:4px 10px;font-size:8px;letter-spacing:2px;color:var(--dim);
-  background:#0e0500;border-bottom:1px solid var(--border);
-  display:flex;justify-content:space-between;}
+.map-wrap{margin:0 6px;border:2px solid var(--gold2);border-radius:6px;overflow:hidden;}
+.map-hdr{padding:7px 12px;font-size:10px;letter-spacing:2px;color:var(--gold);
+  background:linear-gradient(135deg,#1e0900,#120600);border-bottom:1px solid var(--gold2);
+  display:flex;justify-content:space-between;font-weight:bold;}
 .map-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;padding:6px;background:#080300;}
 .tile{aspect-ratio:1;border-radius:3px;border:1px solid transparent;
   display:flex;align-items:center;justify-content:center;
   font-size:10px;cursor:pointer;transition:background-color .12s,border-color .12s;position:relative;overflow:hidden;}
 .tile:hover{transform:scale(1.12);z-index:5;position:relative;}
-.tile.empty{background:#110700;}
-.tile.g1{background:#0d1f07;border-color:#1a3a0a;}
-.tile.g2{background:#102808;border-color:#205010;}
-.tile.g3{background:#154000;border-color:#308020;}
+.tile.empty{background:#0e0600;}
+.tile.g1{background:#1a3a0a;border-color:#4a8a20;}
+.tile.g2{background:#3a3200;border-color:#907028;}
+.tile.g3{background:#3a1800;border-color:#c06010;box-shadow:0 0 5px rgba(200,100,10,.35);}
 .tile.mine{background:#003020;border-color:var(--green);box-shadow:0 0 6px rgba(128,192,64,.4);}
 .tile.rival{background:#200018;border-color:#6020a0;}
 .tile.hot{background:#220800;border-color:var(--red);animation:hot .9s infinite;}
@@ -347,7 +347,7 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
   </div>
 
   <!-- Map -->
-  <div class="map-wrap">
+  <div class="map-wrap" id="mapWrap">
     <div class="map-hdr">
       <span>THE FRONTIER MAP</span>
       <span id="mapHint">Tap a tile to gather</span>
@@ -1340,10 +1340,10 @@ function startGame() {
 const HINTS = [
   { ico:'⛏', title:'START GATHERING',
     text:'Tap any coloured tile on the map below. Green = small yield, yellow = medium, star = big. Tap one now!',
-    glow:'mapGrid' },
+    glow:'mapWrap' },
   { ico:'⏳', title:'TROOPS ARE OUT!',
     text:'Watch the bar fill at the bottom of the tile. Grade 3 🌟 tiles pay the most Gold Dust but take longest.',
-    glow:'mapGrid' },
+    glow:'mapWrap' },
   { ico:'⚱', title:'GOLD DUST EARNED!',
     text:'Your score is Gold Dust + Bounty Tokens × 1.5. Keep tapping tiles — rivals are already ahead!',
     glow:'svGD' },
@@ -1386,7 +1386,26 @@ function _dismissAllHints() {
   document.querySelectorAll('.tut-glow').forEach(el => el.classList.remove('tut-glow'));
 }
 
-function tutOnGameStart()    { setTimeout(() => _showHint(0), 1200); }
+function tutOnGameStart() {
+  // Scroll map into view immediately
+  setTimeout(() => {
+    const map = document.getElementById('mapGrid');
+    if (map) map.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 400);
+  // Show hint and pulse all grade tiles so map is impossible to miss
+  setTimeout(() => {
+    _showHint(0);
+    G.tiles.forEach((t, i) => {
+      if (t.grade > 0) {
+        const el = document.getElementById('tile' + i);
+        if (el) {
+          el.classList.add('tut-glow');
+          setTimeout(() => el.classList.remove('tut-glow'), 6000);
+        }
+      }
+    });
+  }, 1000);
+}
 function tutOnGatherStart()  { if (!_tutTriggered.gather)   { _tutTriggered.gather=true;   setTimeout(() => _showHint(1), 400); } }
 function tutOnGoldEarned()   {
   _tutGatherCount++;
