@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="90" fill="#090400"/>
+  <circle cx="256" cy="256" r="234" fill="none" stroke="#2e1600" stroke-width="4"/>
+  <circle cx="256" cy="256" r="229" fill="none" stroke="#4a2400" stroke-width="1"/>
+  <path transform="translate(4,5)" d="M256,56 L303,191 L446,194 L332,281 L374,418 L256,336 L138,418 L180,281 L66,194 L209,191 Z" fill="#000" opacity="0.35"/>
+  <path d="M256,56 L303,191 L446,194 L332,281 L374,418 L256,336 L138,418 L180,281 L66,194 L209,191 Z" fill="#b87c08"/>
+  <path d="M256,56 L303,191 L209,191 Z" fill="#f5cc30" opacity="0.55"/>
+  <path d="M446,194 L332,281 L303,191 Z" fill="#f5cc30" opacity="0.2"/>
+  <path d="M256,56 L209,191 L66,194 Z" fill="#f5cc30" opacity="0.18"/>
+  <path d="M374,418 L256,336 L332,281 Z" fill="#6a4400" opacity="0.5"/>
+  <path d="M138,418 L256,336 L180,281 Z" fill="#6a4400" opacity="0.5"/>
+  <path d="M256,56 L303,191 L446,194 L332,281 L374,418 L256,336 L138,418 L180,281 L66,194 L209,191 Z" fill="none" stroke="#7a5000" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="256" cy="256" r="58" fill="#9a6808" stroke="#6a4400" stroke-width="2"/>
+  <circle cx="256" cy="256" r="46" fill="none" stroke="#c49020" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <g transform="translate(256,256) rotate(45)">
+    <rect x="14" y="-8" width="162" height="16" rx="8" fill="#2a1000" stroke="#1a0800" stroke-width="1.5"/>
+    <rect x="-64" y="-22" width="80" height="44" rx="6" fill="#4c2800" stroke="#1a0800" stroke-width="1.5"/>
+    <polygon points="-64,-12 -126,0 -64,12" fill="#3c2000" stroke="#1a0800" stroke-width="1.5" stroke-linejoin="round"/>
+    <polygon points="-50,-22 -16,-22 -33,-58" fill="#3c2000" stroke="#1a0800" stroke-width="1.5" stroke-linejoin="round"/>
+    <rect x="90" y="-8" width="6" height="16" rx="2" fill="#1a0800" opacity="0.6"/>
+    <rect x="116" y="-8" width="6" height="16" rx="2" fill="#1a0800" opacity="0.6"/>
+    <rect x="142" y="-8" width="6" height="16" rx="2" fill="#1a0800" opacity="0.6"/>
+  </g>
+  <text x="256" y="268" text-anchor="middle" font-family="Georgia,serif" font-size="32" font-weight="bold" fill="#f0c040" letter-spacing="4">FG</text>
+</svg>

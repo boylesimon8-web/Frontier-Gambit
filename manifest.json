@@ -1,0 +1,25 @@
+{
+  "name": "Frontier Gambit",
+  "short_name": "Frontier",
+  "description": "Fast-paced western territory game. Gather gold, contest rivals, survive flashpoints.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#090400",
+  "theme_color": "#c4920a",
+  "orientation": "portrait-primary",
+  "categories": ["games"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

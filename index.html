@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Frontier Gambit</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#c4920a">
+<meta name="description" content="Fast-paced western territory game. Gather gold, contest rivals, survive flashpoints.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Frontier Gambit">
+<meta property="og:title" content="Frontier Gambit">
+<meta property="og:description" content="Gather gold. Contest rivals. Survive the flashpoints. Can you hold the frontier?">
+<meta property="og:type" content="game">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Frontier Gambit">
+<meta name="twitter:description" content="Gather gold. Contest rivals. Survive the flashpoints.">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -1436,6 +1449,11 @@ function checkStart() {
 document.getElementById('startBtn').addEventListener('click', () => {
   if (!document.getElementById('startBtn').disabled) startGame();
 });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
 </script>
 </body>
 </html>
