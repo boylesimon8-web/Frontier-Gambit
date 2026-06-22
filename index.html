@@ -227,9 +227,30 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
   background:#1a0800;border:1px solid var(--red);color:var(--parch);
   padding:10px 18px;border-radius:6px;font-size:11px;z-index:200;
   transition:bottom .3s;white-space:nowrap;text-align:center;max-width:90vw;white-space:normal;}
-.toast.on{bottom:16px;}
+.toast.on{bottom:90px;}
 .toast.good{border-color:var(--green);}
 .toast.info{border-color:var(--gold2);}
+
+/* Tutorial hint card */
+.hint-card{position:fixed;bottom:-130px;left:50%;transform:translateX(-50%);
+  width:calc(100% - 24px);max-width:410px;z-index:180;
+  background:linear-gradient(135deg,#1e0d00,#130800);
+  border:1px solid var(--gold2);border-radius:10px;
+  padding:12px 14px 10px;display:flex;gap:11px;align-items:flex-start;
+  box-shadow:0 4px 24px rgba(0,0,0,.7);
+  transition:bottom .4s cubic-bezier(.34,1.56,.64,1);cursor:pointer;}
+.hint-card.show{bottom:12px;}
+.hint-ico{font-size:28px;flex-shrink:0;line-height:1.1;}
+.hint-body{flex:1;min-width:0;}
+.hint-step{font-size:8px;letter-spacing:2px;color:var(--gold2);font-weight:bold;margin-bottom:2px;}
+.hint-title{font-size:13px;font-weight:bold;color:var(--gold);margin-bottom:4px;}
+.hint-text{font-size:11px;color:var(--parch);line-height:1.55;}
+.hint-tap{font-size:8px;color:var(--dim);margin-top:6px;letter-spacing:1px;text-align:right;}
+/* Pulsing glow applied to whatever element needs pointing to */
+.tut-glow{box-shadow:0 0 0 2px var(--gold),0 0 16px rgba(240,192,64,.5) !important;
+  animation:tut-pulse 1s ease-in-out infinite !important;border-radius:4px;}
+@keyframes tut-pulse{0%,100%{box-shadow:0 0 0 2px var(--gold2),0 0 8px rgba(240,192,64,.3)}
+  50%{box-shadow:0 0 0 3px var(--gold),0 0 22px rgba(240,192,64,.7)}}
 
 /* Storm banner */
 .storm{position:fixed;top:-56px;left:0;right:0;z-index:150;
@@ -259,6 +280,17 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- TUTORIAL HINT CARD -->
+<div class="hint-card" id="hintCard" onclick="advanceHint()">
+  <div class="hint-ico" id="hintIco">⛏</div>
+  <div class="hint-body">
+    <div class="hint-step" id="hintStep">STEP 1 OF 6</div>
+    <div class="hint-title" id="hintTitle">START GATHERING</div>
+    <div class="hint-text" id="hintText">Tap any coloured tile on the map to send your troops out to gather Gold Dust.</div>
+    <div class="hint-tap">TAP HERE TO DISMISS ▶</div>
+  </div>
+</div>
 
 <!-- ══════════════ TITLE SCREEN ══════════════ -->
 <div id="screenTitle" class="screen active">
@@ -750,6 +782,7 @@ function startGather(i) {
   if (prev >= 0) updateTile(prev);
   updateTile(i);
   toast('⛏ Gathering ' + GRADE_NAMES[G.tiles[i].grade] + ' tile...', 'info');
+  tutOnGatherStart();
 }
 
 function finishGather() {
@@ -798,6 +831,7 @@ function finishGather() {
   renderStats();
   updateTile(i);
   floatPoints(i, '+' + base);
+  tutOnGoldEarned();
 
   // Drop creature
   const dropChance = [0, 0.12, 0.20, 0.32][tile.grade];
@@ -1047,6 +1081,7 @@ function startFlashpoint() {
   }
   if (fp.effect === 'defend') G.defendActive = true;
 
+  tutOnFlashpoint();
   // Show storm warning first
   showStorm(fp.name + ' incoming!');
   setTimeout(() => showFpReveal(fp), 2500);
@@ -1085,6 +1120,7 @@ function endFlashpoint() {
 
 // ── CACHE DROP ────────────────────────────────────────
 function showCacheDrop(grade) {
+  tutOnCreatureDrop();
   const pool = CREATURES.filter(c => {
     if (grade === 1) return c.rarity === 'common';
     if (grade === 2) return c.rarity !== 'legendary';
@@ -1297,8 +1333,68 @@ function startGame() {
   lastTick = 0;
   requestAnimationFrame(gameTick);
 
-  setTimeout(() => toast('⭐ Welcome to Frontier Gambit! Tap tiles to gather Gold Dust.','info'), 800);
+  tutOnGameStart();
 }
+
+// ── TUTORIAL SYSTEM ───────────────────────────────────
+const HINTS = [
+  { ico:'⛏', title:'START GATHERING',
+    text:'Tap any coloured tile on the map below. Green = small yield, yellow = medium, star = big. Tap one now!',
+    glow:'mapGrid' },
+  { ico:'⏳', title:'TROOPS ARE OUT!',
+    text:'Watch the bar fill at the bottom of the tile. Grade 3 🌟 tiles pay the most Gold Dust but take longest.',
+    glow:'mapGrid' },
+  { ico:'⚱', title:'GOLD DUST EARNED!',
+    text:'Your score is Gold Dust + Bounty Tokens × 1.5. Keep tapping tiles — rivals are already ahead!',
+    glow:'svGD' },
+  { ico:'🤠', title:'RIVALS ARE COMPETING',
+    text:'Those emoji icons on tiles are rival players. Contest their tiles to fight and earn Bounty Tokens. Check the leaderboard below.',
+    glow:'lbList' },
+  { ico:'🎒', title:'YOU FOUND A CREATURE!',
+    text:'Tap the creature in your bag, then tap a tile or rival on the map to use its effect. Each one does something different.',
+    glow:'cSlots' },
+  { ico:'⚡', title:'FLASHPOINTS CHANGE EVERYTHING',
+    text:'When the banner turns red, a Flashpoint fires. Read it fast — big bonuses are up for grabs for 45–60 seconds.',
+    glow:'fpBanner' },
+];
+
+let _tutStep = 0;
+let _tutTriggered = { gather:false, firstGold:false, thirdGather:false, creature:false, flashpoint:false };
+let _tutGatherCount = 0;
+
+function _showHint(step) {
+  if (step >= HINTS.length) { _dismissAllHints(); return; }
+  const h = HINTS[step];
+  _tutStep = step;
+  // Clear previous glow
+  document.querySelectorAll('.tut-glow').forEach(el => el.classList.remove('tut-glow'));
+  // Apply glow to target
+  if (h.glow) { const el = document.getElementById(h.glow); if (el) el.classList.add('tut-glow'); }
+  document.getElementById('hintIco').textContent   = h.ico;
+  document.getElementById('hintStep').textContent  = 'STEP ' + (step+1) + ' OF ' + HINTS.length;
+  document.getElementById('hintTitle').textContent = h.title;
+  document.getElementById('hintText').textContent  = h.text;
+  document.getElementById('hintCard').classList.add('show');
+}
+
+function advanceHint() {
+  _showHint(_tutStep + 1);
+}
+
+function _dismissAllHints() {
+  document.getElementById('hintCard').classList.remove('show');
+  document.querySelectorAll('.tut-glow').forEach(el => el.classList.remove('tut-glow'));
+}
+
+function tutOnGameStart()    { setTimeout(() => _showHint(0), 1200); }
+function tutOnGatherStart()  { if (!_tutTriggered.gather)   { _tutTriggered.gather=true;   setTimeout(() => _showHint(1), 400); } }
+function tutOnGoldEarned()   {
+  _tutGatherCount++;
+  if (!_tutTriggered.firstGold)  { _tutTriggered.firstGold=true;  setTimeout(() => _showHint(2), 500); return; }
+  if (!_tutTriggered.thirdGather && _tutGatherCount >= 3) { _tutTriggered.thirdGather=true; setTimeout(() => _showHint(3), 500); }
+}
+function tutOnCreatureDrop() { if (!_tutTriggered.creature)  { _tutTriggered.creature=true;  setTimeout(() => _showHint(4), 800); } }
+function tutOnFlashpoint()   { if (!_tutTriggered.flashpoint){ _tutTriggered.flashpoint=true; setTimeout(() => _showHint(5), 600); } }
 
 // ── TITLE SCREEN WIRING ───────────────────────────────
 document.querySelectorAll('.faction-btn').forEach(btn => {
