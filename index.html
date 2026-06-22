@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Frontier Gambit</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#09050 0;--panel:#160900;--border:#3a1e00;--gold:#f0c040;--gold2:#c4920a;
+  --parch:#f5e6c8;--dim:#907050;--red:#cc2200;--green:#80c040;--purple:#9040d0;
+  --sky:#1a3555;
+}
+html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',serif;
+  background:#09050 0;color:var(--parch);}
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;background:#090500;}
+.screen.active{display:flex;}
+
+/* ── TITLE SCREEN ── */
+.title-wrap{text-align:center;padding:24px 20px;max-width:400px;width:100%;}
+.title-star{font-size:52px;margin-bottom:8px;animation:star-spin 8s linear infinite;}
+@keyframes star-spin{0%{text-shadow:0 0 10px var(--gold)}50%{text-shadow:0 0 30px var(--gold),0 0 60px #ff8020}100%{text-shadow:0 0 10px var(--gold)}}
+.title-name{font-size:32px;font-weight:bold;letter-spacing:4px;color:var(--gold);
+  text-shadow:0 0 20px rgba(240,192,64,.5);text-transform:uppercase;}
+.title-tagline{font-size:12px;letter-spacing:3px;color:var(--dim);margin:4px 0 24px;}
+.name-input{width:100%;padding:12px 16px;background:#1a0900;border:1px solid var(--border);
+  border-radius:6px;color:var(--parch);font-family:Georgia,serif;font-size:16px;
+  text-align:center;outline:none;margin-bottom:16px;}
+.name-input:focus{border-color:var(--gold2);}
+.name-input::placeholder{color:var(--dim);}
+.faction-lbl{font-size:10px;letter-spacing:2px;color:var(--dim);margin-bottom:10px;}
+.factions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+.faction-btn{padding:10px 4px;background:#150900;border:1px solid var(--border);
+  border-radius:6px;font-family:Georgia,serif;font-size:11px;color:var(--dim);
+  cursor:pointer;transition:all .2s;text-align:center;}
+.faction-btn:hover,.faction-btn.picked{background:#2a1200;border-color:var(--gold2);color:var(--gold);}
+.faction-icon{font-size:22px;display:block;margin-bottom:4px;}
+.start-btn{width:100%;padding:14px;background:linear-gradient(135deg,#3a1800,#1a0800);
+  border:2px solid var(--gold2);border-radius:6px;color:var(--gold);
+  font-family:Georgia,serif;font-size:16px;letter-spacing:3px;cursor:pointer;
+  transition:all .2s;}
+.start-btn:hover{background:linear-gradient(135deg,#5a2800,#2a1000);border-color:var(--gold);}
+.start-btn:disabled{opacity:.4;cursor:default;}
+
+/* ── GAME SCREEN ── */
+#screenGame{background:#090500;justify-content:flex-start;overflow-y:auto;}
+.game-shell{width:100%;max-width:430px;margin:0 auto;display:flex;flex-direction:column;min-height:100%;}
+
+/* header */
+.g-header{background:linear-gradient(180deg,#2a1200,#160900);
+  border-bottom:2px solid #3a1e00;padding:8px 14px;
+  display:flex;justify-content:space-between;align-items:center;}
+.g-title{font-size:13px;font-weight:bold;letter-spacing:2px;color:var(--gold);}
+.g-timer{font-size:20px;font-weight:bold;color:var(--gold);font-variant-numeric:tabular-nums;}
+.g-timer.urgent{color:var(--red);animation:timer-pulse .7s infinite;}
+@keyframes timer-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.g-phase{font-size:9px;letter-spacing:2px;color:var(--dim);}
+
+/* stats */
+.g-stats{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;background:#3a1e00;}
+.g-stat{background:#110700;padding:7px 8px;text-align:center;}
+.g-stat-lbl{font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;}
+.g-stat-val{font-size:18px;font-weight:bold;font-variant-numeric:tabular-nums;}
+.gd{color:var(--gold);}
+.bt{color:#e07820;}
+.sc{color:var(--green);}
+.stat-div{background:#3a1e00;}
+
+/* flashpoint banner */
+.fp-banner{margin:6px;padding:8px 12px;border-radius:4px;
+  background:linear-gradient(135deg,#1e0600,#160400);
+  border:1px solid #3a1e00;border-left:3px solid var(--red);
+  cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.fp-banner.live{border-left-color:var(--gold);}
+.fp-banner.idle{border-left-color:#2a1000;cursor:default;}
+.fp-banner-name{font-size:13px;font-weight:bold;color:var(--parch);}
+.fp-banner-time{font-size:11px;color:var(--gold);font-variant-numeric:tabular-nums;}
+.fp-badge{font-size:8px;padding:2px 6px;border-radius:8px;font-weight:bold;letter-spacing:1px;}
+.fp-badge.live{background:var(--red);color:#fff;animation:blink 2s infinite;}
+.fp-badge.idle{background:#1a1a1a;color:#444;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* map */
+.map-wrap{margin:0 6px;border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.map-hdr{padding:4px 10px;font-size:8px;letter-spacing:2px;color:var(--dim);
+  background:#0e0500;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;}
+.map-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;padding:6px;background:#080300;}
+.tile{aspect-ratio:1;border-radius:3px;border:1px solid transparent;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;cursor:pointer;transition:all .12s;position:relative;overflow:hidden;}
+.tile:hover{transform:scale(1.12);z-index:5;position:relative;}
+.tile.empty{background:#110700;}
+.tile.g1{background:#0d1f07;border-color:#1a3a0a;}
+.tile.g2{background:#102808;border-color:#205010;}
+.tile.g3{background:#154000;border-color:#308020;}
+.tile.mine{background:#003020;border-color:var(--green);box-shadow:0 0 6px rgba(128,192,64,.4);}
+.tile.rival{background:#200018;border-color:#6020a0;}
+.tile.hot{background:#220800;border-color:var(--red);animation:hot .9s infinite;}
+.tile.standoff{background:#221200;border:2px solid var(--gold);animation:sf 1s infinite;}
+.tile.trapped{background:#1a1500;border-color:#907000;}
+@keyframes hot{0%,100%{border-color:var(--red)}50%{border-color:#ff5030;box-shadow:0 0 5px rgba(255,60,0,.4)}}
+@keyframes sf{0%,100%{box-shadow:0 0 4px rgba(240,192,64,.4)}50%{box-shadow:0 0 12px rgba(240,192,64,.8)}}
+/* gather progress ring */
+.tile-prog{position:absolute;inset:0;background:rgba(128,192,64,0);
+  display:flex;align-items:center;justify-content:center;}
+.tile-prog-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--green);
+  transition:width .1s linear;}
+/* rival dot */
+.rival-dot{position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;}
+
+/* creatures */
+.creatures-wrap{margin:6px;padding:9px;background:#110700;
+  border:1px solid var(--border);border-radius:4px;}
+.sec-lbl{font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:7px;}
+.c-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.cslot{aspect-ratio:1;border-radius:5px;border:1px solid var(--border);background:#0c0400;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .18s;position:relative;}
+.cslot:hover:not(.empty){transform:translateY(-2px);border-color:var(--gold2);}
+.cslot.selected{border:2px solid var(--gold);box-shadow:0 0 10px rgba(240,192,64,.4);}
+.cslot.common{border-color:#5a3a14;}
+.cslot.uncommon{border-color:#5a5030;}
+.cslot.rare{border-color:#305a14;}
+.cslot.legendary{border-color:#501880;animation:leg 3s infinite;}
+.cslot.empty{border-style:dashed;opacity:.3;cursor:default;}
+@keyframes leg{0%,100%{border-color:#501880;box-shadow:none}50%{border-color:#9050d0;box-shadow:0 0 12px rgba(130,40,180,.6)}}
+.c-icon{font-size:26px;line-height:1;}
+.c-name{font-size:7px;color:var(--dim);margin-top:3px;text-align:center;}
+.c-dot{position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;}
+.cd-common{background:#9a6020;}.cd-uncommon{background:#9a9050;}.cd-rare{background:#509020;}.cd-legendary{background:var(--purple);}
+
+/* horde */
+.horde-wrap{margin:0 6px 6px;padding:9px 11px;background:#080f00;
+  border:1px solid #1a2800;border-left:3px solid #3a5000;border-radius:4px;}
+.horde-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.horde-ttl{font-size:10px;font-weight:bold;color:var(--green);letter-spacing:1px;}
+.horde-ct{font-size:12px;color:var(--parch);}
+.horde-bar{height:7px;background:#101800;border-radius:3px;overflow:hidden;}
+.horde-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#2a5000,var(--green));transition:width .4s;}
+.horde-segs{display:flex;gap:5px;margin-top:4px;}
+.hseg{width:7px;height:7px;border-radius:50%;background:#1e2e00;transition:all .3s;}
+.hseg.on{background:var(--green);box-shadow:0 0 4px rgba(128,192,64,.5);}
+.hseg.full{background:#c8ff00;box-shadow:0 0 8px rgba(200,255,0,.8);animation:hsp .5s infinite;}
+@keyframes hsp{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.horde-msg{font-size:9px;color:var(--dim);margin-top:4px;}
+
+/* leaderboard */
+.lb-wrap{margin:0 6px 8px;padding:9px;background:#110700;border:1px solid var(--border);border-radius:4px;}
+.lb-row{display:grid;grid-template-columns:22px 1fr auto;gap:7px;align-items:center;
+  padding:4px 3px;border-radius:3px;font-size:12px;transition:background .15s;}
+.lb-row.me{background:#0a1e08;border:1px solid #2a4010;}
+.lb-rank{font-size:10px;color:var(--dim);text-align:center;}
+.lb-rank.top{color:var(--gold);font-weight:bold;}
+.lb-name{color:var(--parch);}
+.lb-name.me{color:var(--green);}
+.lb-score{color:var(--gold);font-size:11px;font-variant-numeric:tabular-nums;}
+
+/* ── OVERLAYS ── */
+.ov{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none;opacity:0;
+  transition:opacity .35s,background .35s;}
+.ov.on{pointer-events:all;opacity:1;}
+
+/* Flashpoint reveal */
+.fp-ov{background:rgba(0,0,0,0);}
+.fp-ov.on{background:rgba(0,0,0,.93);}
+.fp-box{text-align:center;padding:0 24px;transform:scale(.5);opacity:0;
+  transition:all .45s cubic-bezier(.34,1.56,.64,1);}
+.fp-ov.on .fp-box{transform:scale(1);opacity:1;}
+.fp-eyebrow{font-size:10px;letter-spacing:4px;color:var(--red);margin-bottom:8px;}
+.fp-big-name{font-size:36px;font-weight:bold;color:var(--gold);letter-spacing:2px;
+  text-shadow:0 0 24px rgba(240,192,64,.6);line-height:1.1;}
+.fp-desc{font-size:13px;color:var(--parch);max-width:280px;margin:12px auto;line-height:1.6;}
+.fp-dur{font-size:26px;color:var(--gold);font-variant-numeric:tabular-nums;margin-top:8px;}
+.fp-hint{font-size:10px;color:var(--dim);margin-top:16px;letter-spacing:1px;}
+.pts{position:absolute;pointer-events:none;font-weight:bold;font-size:14px;
+  color:var(--gold);animation:pt-float 1.2s ease-out forwards;}
+@keyframes pt-float{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+
+/* Cache reveal */
+.cache-ov{background:rgba(0,0,0,0);}
+.cache-ov.on{background:rgba(0,0,0,.9);}
+.bag-wrap{display:flex;flex-direction:column;align-items:center;}
+.bag{font-size:80px;cursor:pointer;line-height:1;transform:scale(0);opacity:0;
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 0 18px rgba(200,150,20,.55));}
+.cache-ov.on .bag{transform:scale(1);opacity:1;}
+.bag.shake{animation:bag-shk .55s ease-in-out;}
+@keyframes bag-shk{0%,100%{transform:scale(1) rotate(0)}20%{transform:scale(1.06) rotate(-6deg)}40%{transform:scale(1.06) rotate(6deg)}60%{transform:scale(1.06) rotate(-3deg)}80%{transform:scale(1.06) rotate(3deg)}}
+.bag-hint{font-size:10px;letter-spacing:2px;color:var(--dim);margin-top:10px;animation:hint 2s .8s infinite;}
+@keyframes hint{0%,100%{opacity:.3}50%{opacity:.85}}
+.c-result{text-align:center;display:none;flex-direction:column;align-items:center;padding:0 20px;}
+.c-result.show{display:flex;}
+.cr-icon{font-size:80px;animation:cent .55s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 0 18px rgba(200,100,40,.8));}
+@keyframes cent{0%{transform:scale(0) rotate(-22deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+.cr-name{font-size:24px;font-weight:bold;color:var(--gold);margin-top:6px;}
+.cr-rar{font-size:9px;letter-spacing:3px;padding:3px 12px;border-radius:10px;margin-top:4px;color:#fff;}
+.cr-desc{font-size:12px;color:var(--parch);max-width:270px;margin:10px auto;line-height:1.55;font-style:italic;}
+.cr-btn{margin-top:16px;padding:10px 28px;background:#150900;border:1px solid var(--gold2);
+  color:var(--gold);font-family:Georgia,serif;font-size:12px;letter-spacing:2px;
+  border-radius:5px;cursor:pointer;}
+.cr-btn:hover{background:#250f00;}
+
+/* Winner */
+.win-ov{background:rgba(0,0,0,0);}
+.win-ov.on{background:rgba(0,0,0,.96);}
+.win-box{text-align:center;padding:0 24px;transform:scale(.3) translateY(40px);opacity:0;
+  transition:all .6s cubic-bezier(.34,1.56,.64,1);}
+.win-ov.on .win-box{transform:scale(1) translateY(0);opacity:1;}
+.win-medal{font-size:70px;animation:medal .6s .2s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes medal{0%{transform:translateY(-60px) scale(.4);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+.win-title{font-size:30px;font-weight:bold;color:var(--gold);letter-spacing:2px;margin-top:8px;text-shadow:0 0 24px rgba(240,192,64,.6);}
+.win-sub{font-size:12px;color:var(--gold2);letter-spacing:2px;margin-top:4px;}
+.win-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0;}
+.win-stat{background:rgba(20,10,0,.8);border:1px solid var(--border);border-radius:6px;padding:10px;}
+.win-stat-l{font-size:8px;letter-spacing:2px;color:var(--dim);}
+.win-stat-v{font-size:20px;font-weight:bold;color:var(--gold);}
+.win-title-earned{font-size:12px;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:6px 14px;display:inline-block;margin-top:6px;}
+.play-again{margin-top:18px;padding:10px 28px;background:#150900;border:1px solid var(--gold2);
+  color:var(--gold);font-family:Georgia,serif;font-size:12px;letter-spacing:2px;border-radius:5px;cursor:pointer;}
+.play-again:hover{background:#250f00;}
+
+/* Toast */
+.toast{position:fixed;bottom:-70px;left:50%;transform:translateX(-50%);
+  background:#1a0800;border:1px solid var(--red);color:var(--parch);
+  padding:10px 18px;border-radius:6px;font-size:11px;z-index:200;
+  transition:bottom .3s;white-space:nowrap;text-align:center;max-width:90vw;white-space:normal;}
+.toast.on{bottom:16px;}
+.toast.good{border-color:var(--green);}
+.toast.info{border-color:var(--gold2);}
+
+/* Storm banner */
+.storm{position:fixed;top:-56px;left:0;right:0;z-index:150;
+  background:linear-gradient(135deg,#281200,#170900);border-bottom:2px solid var(--gold);
+  padding:11px 20px;display:flex;align-items:center;justify-content:center;gap:14px;
+  transition:top .4s cubic-bezier(.34,1.56,.64,1);}
+.storm.on{top:0;}
+.storm-txt{font-size:14px;font-weight:bold;color:var(--gold);letter-spacing:2px;}
+.storm-ico{font-size:18px;animation:spin 2.2s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Particles */
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.pt{position:absolute;border-radius:50%;
+  animation:pt-rise var(--dur,2s) var(--del,0s) ease-out forwards;}
+@keyframes pt-rise{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx,0px),var(--ty,-400px)) scale(0);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- STORM BANNER -->
+<div class="storm" id="storm">
+  <span class="storm-ico">⚡</span>
+  <span class="storm-txt" id="stormTxt">STORM'S COMING...</span>
+  <span class="storm-ico">⚡</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════ TITLE SCREEN ══════════════ -->
+<div id="screenTitle" class="screen active">
+  <div class="title-wrap">
+    <div class="title-star">⭐</div>
+    <div class="title-name">FRONTIER GAMBIT</div>
+    <div class="title-tagline">THE RECKONING</div>
+    <input class="name-input" id="nameInput" type="text" maxlength="16" placeholder="Enter your name, stranger...">
+    <div class="faction-lbl">CHOOSE YOUR FACTION</div>
+    <div class="factions">
+      <div class="faction-btn" data-f="outlaws"><span class="faction-icon">🤠</span>Outlaws</div>
+      <div class="faction-btn" data-f="rangers"><span class="faction-icon">⭐</span>Rangers</div>
+      <div class="faction-btn" data-f="prospectors"><span class="faction-icon">⛏</span>Prospectors</div>
+    </div>
+    <button class="start-btn" id="startBtn" disabled>RIDE OUT</button>
+    <div style="font-size:10px;color:var(--dim);margin-top:10px;letter-spacing:1px;">
+      8 minutes · Gather · Collect Creatures · Outlast your rivals
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ GAME SCREEN ══════════════ -->
+<div id="screenGame" class="screen">
+ <div class="game-shell">
+
+  <!-- Header -->
+  <div class="g-header">
+    <div>
+      <div class="g-title" id="gTitle">FRONTIER GAMBIT</div>
+      <div class="g-phase" id="gPhase">PHASE 1 · THE LAND RUSH</div>
+    </div>
+    <div style="text-align:right">
+      <div class="g-timer" id="gTimer">8:00</div>
+      <div class="g-phase" id="gFaction"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="g-stats">
+    <div class="g-stat"><div class="g-stat-lbl">⚱ Gold Dust</div><div class="g-stat-val gd" id="svGD">0</div></div>
+    <div class="stat-div"></div>
+    <div class="g-stat"><div class="g-stat-lbl">🎯 Bounty</div><div class="g-stat-val bt" id="svBT">0</div></div>
+    <div class="stat-div"></div>
+    <div class="g-stat"><div class="g-stat-lbl">📊 Score</div><div class="g-stat-val sc" id="svSC">0</div></div>
+  </div>
+
+  <!-- Flashpoint banner -->
+  <div class="fp-banner idle" id="fpBanner" onclick="onFpBannerClick()">
+    <div>
+      <span class="fp-badge idle" id="fpBadge">WAITING</span>
+      <div class="fp-banner-name" id="fpBannerName">Next flashpoint incoming...</div>
+    </div>
+    <div class="fp-banner-time" id="fpBannerTime"></div>
+  </div>
+
+  <!-- Map -->
+  <div class="map-wrap">
+    <div class="map-hdr">
+      <span>THE FRONTIER MAP</span>
+      <span id="mapHint">Tap a tile to gather</span>
+    </div>
+    <div class="map-grid" id="mapGrid"></div>
+  </div>
+
+  <!-- Creatures -->
+  <div class="creatures-wrap">
+    <div class="sec-lbl">🎒 Creature Cache — tap to select, tap a tile/rival to use</div>
+    <div class="c-slots" id="cSlots"></div>
+  </div>
+
+  <!-- Horde meter -->
+  <div class="horde-wrap">
+    <div class="horde-top">
+      <span class="horde-ttl">🦟 ALLIANCE HORDE METER</span>
+      <span class="horde-ct"><span id="hCt">0</span>/5</span>
+    </div>
+    <div class="horde-bar"><div class="horde-fill" id="hFill" style="width:0%"></div></div>
+    <div class="horde-segs" id="hSegs"></div>
+    <div class="horde-msg" id="hMsg">Collect Mosquito Swarms and use them against rivals</div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="lb-wrap">
+    <div class="sec-lbl">📋 Live Standings</div>
+    <div id="lbList"></div>
+  </div>
+
+ </div><!-- /game-shell -->
+</div><!-- /screenGame -->
+
+<!-- ══════════════ OVERLAYS ══════════════ -->
+
+<!-- Flashpoint reveal -->
+<div class="ov fp-ov" id="fpOv" onclick="closeFpOv()">
+  <div class="particles" id="fxParts"></div>
+  <div class="fp-box">
+    <div class="fp-eyebrow">⚡ FLASHPOINT ACTIVATED ⚡</div>
+    <div class="fp-big-name" id="fpOvName">THE STANDOFF</div>
+    <div class="fp-desc" id="fpOvDesc">Hold the marked tile when time runs out.</div>
+    <div class="fp-dur" id="fpOvDur">60s</div>
+    <div class="fp-hint">— Tap to dismiss —</div>
+  </div>
+</div>
+
+<!-- Cache reveal -->
+<div class="ov cache-ov" id="cacheOv">
+  <div class="bag-wrap" id="bagWrap">
+    <div class="bag" id="bag" onclick="openBag()">🟤</div>
+    <div class="bag-hint">TAP TO OPEN</div>
+  </div>
+  <div class="c-result" id="cResult">
+    <div class="cr-icon" id="crIcon">🐍</div>
+    <div class="cr-name" id="crName">Rattlesnake</div>
+    <div class="cr-rar" id="crRar">COMMON</div>
+    <div class="cr-desc" id="crDesc"></div>
+    <button class="cr-btn" onclick="closeCache()">ADD TO INVENTORY</button>
+  </div>
+</div>
+
+<!-- Winner screen -->
+<div class="ov win-ov" id="winOv">
+  <div class="win-box">
+    <div class="win-medal" id="winMedal">🏆</div>
+    <div class="win-title" id="winTitle">CHAMPION</div>
+    <div class="win-sub" id="winSub">FRONTIER GAMBIT</div>
+    <div class="win-grid">
+      <div class="win-stat"><div class="win-stat-l">GOLD DUST</div><div class="win-stat-v" id="wGD">0</div></div>
+      <div class="win-stat"><div class="win-stat-l">BOUNTY TOKENS</div><div class="win-stat-v" id="wBT">0</div></div>
+      <div class="win-stat"><div class="win-stat-l">FINAL SCORE</div><div class="win-stat-v" id="wSC">0</div></div>
+      <div class="win-stat"><div class="win-stat-l">CREATURES USED</div><div class="win-stat-v" id="wCR">0</div></div>
+    </div>
+    <div class="win-title-earned" id="winTitle2"></div>
+    <button class="play-again" onclick="location.reload()">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   FRONTIER GAMBIT — GAME ENGINE
+   ═══════════════════════════════════════════════════════ */
+
+// ── CREATURE DATA ─────────────────────────────────────
+const CREATURES = [
+  {id:'rattlesnake',icon:'🐍',name:'Rattlesnake',rarity:'common',rc:'#8a5020',
+   desc:'"Silent bite." — Slows a rival\'s gathering by 60% for 20 seconds. Untraceable.',
+   target:'rival',effect:'slow'},
+  {id:'mosquito',icon:'🦟',name:'Mosquito Swarm',rarity:'common',rc:'#506020',
+   desc:'"Tiny. Annoying. Unstoppable in numbers." — Adds to the Horde Meter. At 5: Horde triggers!',
+   target:'horde',effect:'horde'},
+  {id:'puma',icon:'🦁',name:'Puma Frenzy',rarity:'uncommon',rc:'#8a7030',
+   desc:'"Old frontier fury." — Doubles your next gather\'s gold dust reward.',
+   target:'self',effect:'puma'},
+  {id:'scorpion',icon:'🦂',name:'Scorpion',rarity:'common',rc:'#8a5020',
+   desc:'"Touch my tile." — Plants a trap. Next rival who gathers this tile loses 200 gold dust.',
+   target:'tile',effect:'trap'},
+  {id:'coyote',icon:'🦊',name:'Coyote',rarity:'uncommon',rc:'#8a7030',
+   desc:'"You saw nothing." — Sends a decoy that distracts a rival for 15 seconds.',
+   target:'rival',effect:'decoy'},
+  {id:'eagle',icon:'🦅',name:'Eagle Eye',rarity:'rare',rc:'#507020',
+   desc:'"Sky sees all." — Reveals which tile holds the highest-value gather right now.',
+   target:'map',effect:'reveal'},
+  {id:'grizzly',icon:'🐻',name:'Grizzly Shield',rarity:'rare',rc:'#507020',
+   desc:'"Hit the bear. Bear doesn\'t move." — Protects your next gather from rival interruption.',
+   target:'self',effect:'shield'},
+  {id:'stallion',icon:'🐴',name:'Wild Stallion',rarity:'uncommon',rc:'#8a7030',
+   desc:'"Nobody catches a frontier horse." — Cuts all your gather times by 50% for 30 seconds.',
+   target:'self',effect:'speed'},
+  {id:'jackalope',icon:'🐰',name:'Jackalope',rarity:'rare',rc:'#507020',
+   desc:'"Nobody knows what this does. That\'s the point." — Random effect. Anything could happen.',
+   target:'self',effect:'random'},
+  {id:'thunderbird',icon:'⚡',name:'Thunderbird',rarity:'legendary',rc:'#601890',
+   desc:'"The sky breaks open." — Interrupts ALL rivals\' current gathers simultaneously.',
+   target:'all',effect:'thunder'},
+];
+
+// ── FLASHPOINTS ───────────────────────────────────────
+const FLASHPOINTS = [
+  {name:'THE STANDOFF',
+   desc:'A contested tile appears on the map. Hold it when time runs out for a massive Gold Dust bonus.',
+   duration:60,effect:'standoff'},
+  {name:'BOUNTY BLITZ',
+   desc:'All Bounty Token rewards TRIPLED for 45 seconds. Every creature use, every rival hit — cash in now.',
+   duration:45,effect:'blitz'},
+  {name:'GOLD CONVOY',
+   desc:'A bonus Gold Vein appears for 60 seconds. First to gather it takes ALL the gold.',
+   duration:60,effect:'convoy'},
+  {name:"SHERIFF'S CHASE",
+   desc:'The rival with the most Outlaw Marks is revealed. Take them down for 500 Bounty Tokens.',
+   duration:50,effect:'chase'},
+  {name:'LAST STAND',
+   desc:'Defending your current tile earns Bounty Tokens for every second held. Stay put and earn.',
+   duration:45,effect:'defend'},
+];
+
+// ── AI RIVALS ─────────────────────────────────────────
+const RIVAL_DEFS = [
+  {name:'Dusty_Rider',   color:'#c040ff',icon:'🤠',style:'aggressive', faction:'outlaws'},
+  {name:'ProspectorJoe', color:'#40c0ff',icon:'⛏', style:'patient',    faction:'prospectors'},
+  {name:'CannonballKate',color:'#ff8040',icon:'💥',style:'fast',       faction:'outlaws'},
+  {name:'The_Judge',     color:'#40ffc0',icon:'⭐',style:'bounty',     faction:'rangers'},
+  {name:'SilverSpurs',   color:'#ffc040',icon:'🎯',style:'horde',      faction:'rangers'},
+];
+
+// ── MAP LAYOUT ────────────────────────────────────────
+// 9 columns × 8 rows = 72 tiles
+// grades: 0=empty, 1=g1(low), 2=g2(mid), 3=g3(high)
+const MAP_LAYOUT = [
+  1,0,2,3,0,1,2,0,1,
+  1,1,1,2,1,2,1,1,1,
+  2,1,3,1,1,1,3,1,2,
+  1,2,1,1,2,1,1,2,1,
+  1,1,2,3,1,3,2,1,1,
+  2,1,1,1,2,1,1,1,2,
+  1,1,3,1,1,1,3,1,1,
+  1,2,1,2,0,2,1,2,1,
+];
+
+// ── GAME STATE ────────────────────────────────────────
+let G = {};
+
+function initGame(playerName, faction) {
+  G = {
+    name: playerName,
+    faction: faction,
+    gold: 0,
+    bounty: 0,
+    creaturesUsed: 0,
+    timeLeft: 480,          // 8 minutes
+    phase: 1,
+    running: false,
+    paused: false,
+    // gather state
+    gatheringTile: -1,
+    gatherProgress: 0,
+    gatherDuration: 0,
+    gatherPuma: false,      // puma frenzy active
+    gatherShield: false,
+    gatherSpeed: 1.0,
+    gatherSpeedTimer: 0,
+    // creatures
+    inventory: [],          // max 3
+    selectedCreature: null,
+    // horde
+    hordeCount: 0,
+    // outlaw
+    outlawMarks: 0,
+    // flashpoint
+    fp: null,               // current flashpoint or null
+    fpTimer: 0,
+    nextFp: 120 + Math.random()*60, // first FP at 2-3 min
+    // standoff tile
+    standoffTile: -1,
+    standoffHeld: 0,
+    convoyTile: -1,
+    // blitz
+    blitzActive: false,
+    // defend
+    defendActive: false,
+    defendAccum: 0,
+    // rivals
+    rivals: RIVAL_DEFS.map((r,i) => ({
+      ...r,
+      gold: 0,
+      bounty: 0,
+      tile: -1,
+      gatherTimer: 0,
+      slowTimer: 0,
+      decoyTimer: 0,
+      outlawMarks: 0,
+      trapped: false,
+      aiTimer: 2 + i * 1.5,
+    })),
+    // tiles
+    tiles: MAP_LAYOUT.map((grade,i) => ({
+      grade,
+      idx: i,
+      trapped: false,
+      convoy: false,
+      standoff: false,
+    })),
+    // intervals
+    tickId: null,
+    fpTickId: null,
+    aiTickId: null,
+    renderLbId: null,
+  };
+}
+
+// ── SCORING ───────────────────────────────────────────
+function finalScore(gold, bounty) { return gold + Math.floor(bounty * 1.5); }
+function playerScore() { return finalScore(G.gold, G.bounty); }
+
+// ── TILE HELPERS ──────────────────────────────────────
+const GRADE_NAMES = ['','Grade 1','Grade 2','Grade 3'];
+const GRADE_BASE  = [0, 10, 28, 65];
+const GRADE_TIME  = [0, 4, 7, 12]; // seconds
+function tileClass(t) {
+  if (t.grade === 0) return 'empty';
+  if (t.standoff) return 'standoff';
+  if (t.convoy)   return 'mine';
+  if (t.trapped)  return 'trapped';
+  if (G.gatheringTile === t.idx) return 'mine';
+  const onRival = G.rivals.find(r => r.tile === t.idx);
+  if (onRival) return 'rival';
+  if (t.grade === 3) return 'g3';
+  if (t.grade === 2) return 'g2';
+  return 'g1';
+}
+const GRADE_ICONS = {0:'', 1:'🟩', 2:'🟡', 3:'🌟'};
+function tileIcon(t) {
+  if (t.standoff) return '⭐';
+  if (t.convoy)   return '💰';
+  if (t.trapped)  return '🦂';
+  const onRival = G.rivals.find(r => r.tile === t.idx);
+  if (onRival && G.gatheringTile !== t.idx) return onRival.icon;
+  if (G.gatheringTile === t.idx) return '⛏';
+  return GRADE_ICONS[t.grade] || '';
+}
+
+// ── MAP RENDER ────────────────────────────────────────
+function renderMap() {
+  const grid = document.getElementById('mapGrid');
+  grid.innerHTML = '';
+  G.tiles.forEach((t, i) => {
+    const d = document.createElement('div');
+    d.className = 'tile ' + tileClass(t);
+    d.id = 'tile' + i;
+    d.innerHTML = tileIcon(t);
+    if (t.grade > 0) {
+      d.onclick = () => onTileClick(i);
+      // Progress bar if gathering here
+      if (G.gatheringTile === i) {
+        const bar = document.createElement('div');
+        bar.className = 'tile-prog-bar';
+        bar.id = 'progBar';
+        bar.style.width = Math.floor((G.gatherProgress / G.gatherDuration) * 100) + '%';
+        d.appendChild(bar);
+      }
+    }
+    grid.appendChild(d);
+  });
+}
+
+function updateTile(i) {
+  const d = document.getElementById('tile' + i);
+  if (!d) return;
+  d.className = 'tile ' + tileClass(G.tiles[i]);
+  d.innerHTML = tileIcon(G.tiles[i]);
+  if (G.gatheringTile === i) {
+    const bar = document.createElement('div');
+    bar.className = 'tile-prog-bar';
+    bar.id = 'progBar';
+    bar.style.width = Math.floor((G.gatherProgress / G.gatherDuration) * 100) + '%';
+    d.appendChild(bar);
+  }
+}
+
+// ── STATS RENDER ──────────────────────────────────────
+function renderStats() {
+  document.getElementById('svGD').textContent = G.gold.toLocaleString();
+  document.getElementById('svBT').textContent = G.bounty.toLocaleString();
+  document.getElementById('svSC').textContent = playerScore().toLocaleString();
+}
+
+// ── TIMER RENDER ──────────────────────────────────────
+function renderTimer() {
+  const m = Math.floor(G.timeLeft / 60);
+  const s = Math.floor(G.timeLeft % 60);
+  const el = document.getElementById('gTimer');
+  el.textContent = m + ':' + String(s).padStart(2,'0');
+  if (G.timeLeft <= 60) el.classList.add('urgent');
+  else el.classList.remove('urgent');
+  // Phase
+  let phase = 'PHASE 1 · THE LAND RUSH';
+  if (G.timeLeft <= 300) phase = 'PHASE 2 · THE BOUNTY BOARD';
+  if (G.timeLeft <= 120) phase = 'PHASE 3 · THE RECKONING';
+  document.getElementById('gPhase').textContent = phase;
+}
+
+// ── CREATURE SLOTS ────────────────────────────────────
+function renderCreatures() {
+  const wrap = document.getElementById('cSlots');
+  wrap.innerHTML = '';
+  const slots = [...G.inventory, null, null, null].slice(0,3);
+  slots.forEach((c, idx) => {
+    const d = document.createElement('div');
+    if (c) {
+      d.className = `cslot ${c.rarity}${G.selectedCreature === idx ? ' selected' : ''}`;
+      d.innerHTML = `<div class="c-icon">${c.icon}</div><div class="c-name">${c.name}</div><div class="c-dot cd-${c.rarity}"></div>`;
+      d.onclick = () => selectCreature(idx);
+    } else {
+      d.className = 'cslot empty';
+      d.innerHTML = '<div class="c-icon" style="font-size:20px;opacity:.3">+</div>';
+    }
+    wrap.appendChild(d);
+  });
+}
+
+// ── HORDE ─────────────────────────────────────────────
+function renderHorde() {
+  document.getElementById('hCt').textContent = G.hordeCount;
+  document.getElementById('hFill').style.width = Math.min(G.hordeCount/5*100,100) + '%';
+  const segs = document.getElementById('hSegs');
+  segs.innerHTML = '';
+  for (let i=0;i<5;i++){
+    const s = document.createElement('div');
+    s.className = 'hseg' + (i<G.hordeCount ? (G.hordeCount>=5?' full':' on') : '');
+    segs.appendChild(s);
+  }
+  const msg = document.getElementById('hMsg');
+  if (G.hordeCount >= 5) { msg.textContent = '🔥 HORDE UNLEASHED — ALL rivals debuffed 35% for 20 seconds!'; msg.style.color='#c8ff00'; }
+  else if (G.hordeCount === 4) { msg.textContent = '⚠ ONE MORE — Horde imminent!'; msg.style.color=G.gold; }
+  else { msg.textContent = `${5-G.hordeCount} more Mosquito Swarms needed to trigger Horde`; msg.style.color='var(--dim)'; }
+}
+
+// ── LEADERBOARD ───────────────────────────────────────
+function renderLeaderboard() {
+  const entries = [
+    {name: G.name + (G.faction ? ' [' + G.faction[0].toUpperCase() + ']' : ''), score: playerScore(), me:true},
+    ...G.rivals.map(r => ({name: r.name, score: finalScore(r.gold, r.bounty), me:false}))
+  ].sort((a,b) => b.score - a.score);
+
+  const wrap = document.getElementById('lbList');
+  wrap.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  entries.forEach((e,i) => {
+    const d = document.createElement('div');
+    d.className = 'lb-row' + (e.me ? ' me' : '');
+    d.innerHTML = `
+      <div class="lb-rank${i<3?' top':''}">${medals[i]||(i+1)}</div>
+      <div class="lb-name${e.me?' me':''}">${e.me ? '▶ ' : ''}${e.name}</div>
+      <div class="lb-score">${e.score.toLocaleString()}</div>`;
+    wrap.appendChild(d);
+  });
+}
+
+// ── FLASHPOINT BANNER ─────────────────────────────────
+function renderFpBanner() {
+  const banner = document.getElementById('fpBanner');
+  const badge  = document.getElementById('fpBadge');
+  const name   = document.getElementById('fpBannerName');
+  const time   = document.getElementById('fpBannerTime');
+
+  if (G.fp) {
+    banner.className = 'fp-banner live';
+    badge.className  = 'fp-badge live';
+    badge.textContent = '● LIVE';
+    name.textContent  = G.fp.name;
+    time.textContent  = G.fpTimer + 's';
+  } else {
+    banner.className = 'fp-banner idle';
+    badge.className  = 'fp-badge idle';
+    badge.textContent = 'WAITING';
+    name.textContent  = 'Next flashpoint in ' + Math.ceil(G.nextFp) + 's...';
+    time.textContent  = '';
+  }
+}
+
+// ── TILE CLICK ────────────────────────────────────────
+function onTileClick(i) {
+  const tile = G.tiles[i];
+  if (tile.grade === 0) return;
+
+  // If creature is selected, use on tile
+  if (G.selectedCreature !== null) {
+    useCreatureOnTile(G.selectedCreature, i);
+    return;
+  }
+
+  // Start/change gather
+  if (G.gatheringTile === i) return; // already here
+  startGather(i);
+}
+
+function startGather(i) {
+  const prev = G.gatheringTile;
+  G.gatheringTile = i;
+  G.gatherProgress = 0;
+  const dur = GRADE_TIME[G.tiles[i].grade];
+  G.gatherDuration = G.gatherSpeed !== 1.0 ? dur * G.gatherSpeed : dur;
+  if (prev >= 0) updateTile(prev);
+  updateTile(i);
+  toast('⛏ Gathering ' + GRADE_NAMES[G.tiles[i].grade] + ' tile...', 'info');
+}
+
+function finishGather() {
+  const i = G.gatheringTile;
+  const tile = G.tiles[i];
+  G.gatheringTile = -1;
+  G.gatherProgress = 0;
+
+  // Check trap
+  if (tile.trapped) {
+    tile.trapped = false;
+    toast('🦂 Scorpion trap! Lost 200 Gold Dust!', 'bad');
+    G.gold = Math.max(0, G.gold - 200);
+    renderStats();
+    updateTile(i);
+    return;
+  }
+
+  // Check rival conflict
+  const rival = G.rivals.find(r => r.tile === i);
+  if (rival && !G.gatherShield) {
+    // Fight — bounty tokens if we win
+    const won = Math.random() > 0.4;
+    if (won) {
+      const bt = G.blitzActive ? 150 : 50;
+      G.bounty += bt;
+      toast(`⚔ Drove off ${rival.name}! +${bt} Bounty Tokens`, 'good');
+      rival.tile = -1;
+      rival.gatherTimer = 0;
+    } else {
+      toast(`⚔ ${rival.name} held the tile! You were pushed back.`, 'bad');
+      renderStats();
+      updateTile(i);
+      return;
+    }
+  }
+  if (G.gatherShield) G.gatherShield = false;
+
+  // Gold earned
+  let base = GRADE_BASE[tile.grade];
+  if (G.gatherPuma) { base *= 2; G.gatherPuma = false; toast('🦁 Puma Frenzy! Double gold!','good'); }
+  if (tile.convoy)  { base += 250; tile.convoy = false; toast('💰 You grabbed the Gold Convoy! +250 bonus!', 'good'); }
+  if (tile.standoff && G.fpTimer <= 5) { base += 300; toast('⭐ Standoff winner! +300 Gold Dust!', 'good'); }
+
+  G.gold += base;
+  renderStats();
+  updateTile(i);
+  floatPoints(i, '+' + base);
+
+  // Drop creature
+  const dropChance = [0, 0.12, 0.20, 0.32][tile.grade];
+  if (Math.random() < dropChance && G.inventory.length < 3) {
+    setTimeout(() => showCacheDrop(tile.grade), 600);
+  }
+}
+
+function floatPoints(tileIdx, text) {
+  const el = document.getElementById('tile' + tileIdx);
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const pt = document.createElement('div');
+  pt.className = 'pts';
+  pt.textContent = text;
+  pt.style.left = r.left + r.width/2 - 20 + 'px';
+  pt.style.top  = r.top + 'px';
+  document.body.appendChild(pt);
+  setTimeout(() => pt.remove(), 1300);
+}
+
+// ── GATHER TICK ───────────────────────────────────────
+function gatherTick(dt) {
+  if (G.gatheringTile < 0) return;
+  G.gatherProgress += dt;
+  const bar = document.getElementById('progBar');
+  if (bar) bar.style.width = Math.min(G.gatherProgress / G.gatherDuration * 100, 100) + '%';
+  if (G.gatherProgress >= G.gatherDuration) finishGather();
+}
+
+// ── AI SYSTEM ─────────────────────────────────────────
+function aiTick(dt) {
+  G.rivals.forEach(r => {
+    if (r.decoyTimer > 0) { r.decoyTimer -= dt; return; } // distracted
+    if (r.slowTimer > 0) r.slowTimer -= dt;
+
+    r.aiTimer -= dt;
+    if (r.aiTimer > 0) return;
+
+    // Set next decision time based on style
+    const intervals = {aggressive:2.5,patient:5,fast:1.8,bounty:3,horde:4};
+    r.aiTimer = (intervals[r.style]||3) + Math.random()*2;
+
+    // Pick a tile to target
+    const eligible = G.tiles.filter(t => t.grade > 0 && G.tiles.indexOf(t) !== G.gatheringTile);
+    if (!eligible.length) return;
+
+    let target;
+    if (r.style === 'aggressive') {
+      // Prefer Grade 3, sometimes player's tile
+      target = eligible.sort((a,b) => b.grade-a.grade)[Math.floor(Math.random()*2)];
+    } else if (r.style === 'patient') {
+      // Grade 1-2 only
+      const safe = eligible.filter(t=>t.grade<3);
+      target = safe[Math.floor(Math.random()*safe.length)] || eligible[0];
+    } else if (r.style === 'fast') {
+      // Random
+      target = eligible[Math.floor(Math.random()*eligible.length)];
+    } else if (r.style === 'bounty') {
+      // Target outlaws or high-grade
+      const outlaw = G.outlawMarks > 0;
+      target = outlaw && Math.random()>.5 ? eligible[0] :
+               eligible.sort((a,b)=>b.grade-a.grade)[0];
+    } else {
+      // horde style - gather anything
+      target = eligible[Math.floor(Math.random()*eligible.length)];
+    }
+
+    const prevTile = r.tile;
+    r.tile = G.tiles.indexOf(target);
+
+    // Rival gather timer
+    const speed = r.slowTimer > 0 ? 2 : 1;
+    r.gatherTimer = GRADE_TIME[target.grade] * speed + Math.random()*2;
+
+    if (prevTile >= 0) updateTile(prevTile);
+    updateTile(r.tile);
+  });
+
+  // Rival gather progress
+  G.rivals.forEach(r => {
+    if (r.tile < 0) return;
+    r.gatherTimer -= dt;
+    if (r.gatherTimer <= 0) {
+      const tile = G.tiles[r.tile];
+      if (!tile || tile.grade === 0) { r.tile = -1; return; }
+
+      // Check trap
+      if (tile.trapped) {
+        tile.trapped = false;
+        toast(`🦂 ${r.name} hit your Scorpion trap! -200 gold from them`, 'good');
+        r.gold = Math.max(0, r.gold - 200);
+        G.bounty += G.blitzActive ? 150 : 50;
+        renderStats();
+        updateTile(r.tile);
+        r.tile = -1;
+        return;
+      }
+
+      const earned = GRADE_BASE[tile.grade] + Math.floor(Math.random()*10);
+      r.gold += earned;
+      r.tile = -1;
+      r.gatherTimer = 0;
+      updateTile(G.tiles.indexOf(tile));
+    }
+  });
+}
+
+// ── CREATURE SYSTEM ───────────────────────────────────
+function selectCreature(idx) {
+  if (!G.inventory[idx]) return;
+  G.selectedCreature = G.selectedCreature === idx ? null : idx;
+  renderCreatures();
+  if (G.selectedCreature !== null) {
+    const c = G.inventory[idx];
+    toast(`${c.icon} ${c.name} selected — ${c.target === 'self' ? 'tap it again to activate' : c.target === 'all' ? 'tap again to use on all rivals' : 'tap a tile or rival to target'}`, 'info');
+    if (c.target === 'self' || c.target === 'all' || c.target === 'horde') {
+      useCreatureOnTile(idx, -1);
+    }
+  }
+}
+
+function useCreatureOnTile(slotIdx, tileIdx) {
+  const c = G.inventory[slotIdx];
+  if (!c) return;
+  G.inventory.splice(slotIdx, 1);
+  G.selectedCreature = null;
+  G.creaturesUsed++;
+  renderCreatures();
+  applyCreatureEffect(c, tileIdx);
+}
+
+function applyCreatureEffect(c, tileIdx) {
+  switch(c.effect) {
+    case 'slow': {
+      const rival = tileIdx >= 0 ? G.rivals.find(r => r.tile === tileIdx) : G.rivals[Math.floor(Math.random()*G.rivals.length)];
+      if (rival) {
+        rival.slowTimer = 20;
+        toast(`🐍 Rattlesnake bites ${rival.name}! Slowed for 20s`, 'good');
+        G.bounty += G.blitzActive ? 30 : 10;
+        renderStats();
+      } else toast('🐍 No rival on that tile!', 'bad');
+      break;
+    }
+    case 'horde': {
+      G.hordeCount++;
+      renderHorde();
+      if (G.hordeCount >= 5) triggerHorde();
+      else toast(`🦟 Mosquito Swarm added! ${G.hordeCount}/5`, 'good');
+      break;
+    }
+    case 'puma': {
+      G.gatherPuma = true;
+      toast('🦁 Puma Frenzy! Next gather gives double gold dust!', 'good');
+      break;
+    }
+    case 'trap': {
+      if (tileIdx >= 0 && G.tiles[tileIdx].grade > 0) {
+        G.tiles[tileIdx].trapped = true;
+        updateTile(tileIdx);
+        toast('🦂 Scorpion trap planted! Any rival who gathers that tile loses 200 gold.', 'good');
+      } else toast('🦂 Tap a valid tile to plant the Scorpion!', 'bad');
+      break;
+    }
+    case 'decoy': {
+      const rival = G.rivals[Math.floor(Math.random()*G.rivals.length)];
+      rival.decoyTimer = 15;
+      toast(`🦊 Coyote decoy! ${rival.name} is confused for 15 seconds!`, 'good');
+      G.bounty += G.blitzActive ? 30 : 10;
+      renderStats();
+      break;
+    }
+    case 'reveal': {
+      const best = G.tiles.reduce((best,t,i)=>t.grade>best.grade?{grade:t.grade,idx:i}:best,{grade:0,idx:-1});
+      if (best.idx>=0) {
+        toast(`🦅 Eagle Eye: Best tile is #${best.idx+1} (${GRADE_NAMES[best.grade]}) — highlighted!`, 'good');
+        const el = document.getElementById('tile'+best.idx);
+        if(el){el.style.boxShadow='0 0 14px rgba(240,192,64,1)';setTimeout(()=>el.style.boxShadow='',3000);}
+      }
+      break;
+    }
+    case 'shield': {
+      G.gatherShield = true;
+      toast('🐻 Grizzly Shield active! Your next gather is protected from rivals.', 'good');
+      break;
+    }
+    case 'speed': {
+      G.gatherSpeed = 0.5;
+      G.gatherSpeedTimer = 30;
+      toast('🐴 Wild Stallion! Gather speed doubled for 30 seconds!', 'good');
+      break;
+    }
+    case 'random': {
+      const rolls = [
+        ()=>{G.gold+=500;renderStats();floatPoints(G.gatheringTile>=0?G.gatheringTile:35,'+500');toast('🐰 Jackalope: +500 Gold Dust! Lucky!','good');},
+        ()=>{G.bounty+=300;renderStats();toast('🐰 Jackalope: +300 Bounty Tokens! Not bad!','good');},
+        ()=>{G.gatherPuma=true;toast('🐰 Jackalope: Puma Frenzy triggered! Double next gather!','good');},
+        ()=>{G.gold=Math.max(0,G.gold-100);renderStats();toast('🐰 Jackalope: Self-sting! Lost 100 gold. Ouch.','bad');},
+        ()=>{G.rivals.forEach(r=>r.slowTimer=10);toast('🐰 Jackalope: ALL rivals slowed 10 seconds!','good');G.bounty+=100;renderStats();},
+      ];
+      setTimeout(()=>rolls[Math.floor(Math.random()*rolls.length)](), 1000);
+      toast('🐰 Jackalope activated... something is happening...', 'info');
+      break;
+    }
+    case 'thunder': {
+      G.rivals.forEach(r=>{r.tile=-1;r.gatherTimer=0;});
+      renderMap();
+      toast('⚡ THUNDERBIRD! ALL rivals\' gathers interrupted!', 'good');
+      G.bounty += G.blitzActive ? 300 : 200;
+      renderStats();
+      break;
+    }
+  }
+}
+
+function triggerHorde() {
+  G.hordeCount = 0;
+  renderHorde();
+  G.rivals.forEach(r => r.slowTimer = 20);
+  G.bounty += G.blitzActive ? 450 : 150;
+  renderStats();
+  toast('🦟🦟🦟 HORDE UNLEASHED! All rivals debuffed for 20 seconds! +150 Bounty Tokens!', 'good');
+}
+
+// ── FLASHPOINTS ───────────────────────────────────────
+function startFlashpoint() {
+  const pool = FLASHPOINTS.filter(fp => !G.fp || fp.name !== G.fp?.name);
+  const fp = pool[Math.floor(Math.random()*pool.length)];
+  G.fp = fp;
+  G.fpTimer = fp.duration;
+
+  // Set up effects
+  if (fp.effect === 'standoff') {
+    const valid = G.tiles.filter(t=>t.grade>0);
+    const pick = valid[Math.floor(Math.random()*valid.length)];
+    G.standoffTile = G.tiles.indexOf(pick);
+    G.tiles[G.standoffTile].standoff = true;
+    updateTile(G.standoffTile);
+  }
+  if (fp.effect === 'blitz') G.blitzActive = true;
+  if (fp.effect === 'convoy') {
+    const valid = G.tiles.filter(t=>t.grade>0);
+    const pick = valid[Math.floor(Math.random()*valid.length)];
+    G.convoyTile = G.tiles.indexOf(pick);
+    G.tiles[G.convoyTile].convoy = true;
+    updateTile(G.convoyTile);
+  }
+  if (fp.effect === 'defend') G.defendActive = true;
+
+  // Show storm warning first
+  showStorm(fp.name + ' incoming!');
+  setTimeout(() => showFpReveal(fp), 2500);
+
+  // Schedule next flashpoint after this one ends
+  G.nextFp = fp.duration + 90 + Math.random()*90;
+}
+
+function endFlashpoint() {
+  if (!G.fp) return;
+  const fp = G.fp;
+  if (fp.effect === 'standoff' && G.standoffTile >= 0) {
+    G.tiles[G.standoffTile].standoff = false;
+    updateTile(G.standoffTile);
+    G.standoffTile = -1;
+  }
+  if (fp.effect === 'blitz') G.blitzActive = false;
+  if (fp.effect === 'convoy' && G.convoyTile >= 0) {
+    G.tiles[G.convoyTile].convoy = false;
+    updateTile(G.convoyTile);
+    G.convoyTile = -1;
+  }
+  if (fp.effect === 'defend') {
+    if (G.defendAccum > 0) {
+      G.bounty += G.defendAccum;
+      renderStats();
+      toast(`⭐ Last Stand ended: +${G.defendAccum} Bounty Tokens earned defending!`, 'good');
+      G.defendAccum = 0;
+    }
+    G.defendActive = false;
+  }
+  G.fp = null;
+  G.fpTimer = 0;
+  renderFpBanner();
+}
+
+// ── CACHE DROP ────────────────────────────────────────
+function showCacheDrop(grade) {
+  const pool = CREATURES.filter(c => {
+    if (grade === 1) return c.rarity === 'common';
+    if (grade === 2) return c.rarity !== 'legendary';
+    return true;
+  });
+  const c = pool[Math.floor(Math.random()*pool.length)];
+  const rarity = ['🟤','⬜','🟨','⬛'];
+  const rarityIdx = {common:0,uncommon:1,rare:2,legendary:3}[c.rarity];
+
+  const ov = document.getElementById('cacheOv');
+  const bag = document.getElementById('bag');
+  const res = document.getElementById('cResult');
+  bag.textContent = rarity[rarityIdx];
+  document.getElementById('bagWrap').style.display = 'flex';
+  res.classList.remove('show');
+  res.style.display = 'none';
+  ov.classList.add('on');
+  ov._creature = c;
+
+  setTimeout(() => { bag.classList.add('shake'); setTimeout(()=>bag.classList.remove('shake'),600);}, 800);
+  setTimeout(() => { bag.classList.add('shake'); setTimeout(()=>bag.classList.remove('shake'),600);}, 1600);
+}
+
+let bagOpened = false;
+function openBag() {
+  if (bagOpened) return;
+  bagOpened = true;
+  const ov = document.getElementById('cacheOv');
+  const c = ov._creature;
+  document.getElementById('bagWrap').style.display = 'none';
+  document.getElementById('crIcon').textContent = c.icon;
+  document.getElementById('crName').textContent = c.name;
+  const rar = document.getElementById('crRar');
+  rar.textContent = c.rarity.toUpperCase();
+  rar.style.background = c.rc;
+  document.getElementById('crDesc').textContent = c.desc;
+  const res = document.getElementById('cResult');
+  res.style.display = 'flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>res.classList.add('show')));
+}
+
+function closeCache() {
+  const ov = document.getElementById('cacheOv');
+  const c = ov._creature;
+  if (c && G.inventory.length < 3) {
+    G.inventory.push(c);
+    renderCreatures();
+    toast(`${c.icon} ${c.name} added to inventory!`, 'good');
+  } else if (c) {
+    toast('Inventory full! A cache was lost.', 'bad');
+  }
+  ov.classList.remove('on');
+  bagOpened = false;
+}
+
+// ── FP REVEAL ─────────────────────────────────────────
+function showFpReveal(fp) {
+  document.getElementById('fpOvName').textContent = fp.name;
+  document.getElementById('fpOvDesc').textContent = fp.desc;
+  document.getElementById('fpOvDur').textContent = fp.duration + 's';
+  spawnParticles();
+  document.getElementById('fpOv').classList.add('on');
+  renderFpBanner();
+  setTimeout(closeFpOv, 5000);
+}
+
+function closeFpOv() {
+  document.getElementById('fpOv').classList.remove('on');
+}
+
+function onFpBannerClick() {
+  if (G.fp) showFpReveal(G.fp);
+}
+
+function spawnParticles() {
+  const c = document.getElementById('fxParts');
+  c.innerHTML = '';
+  const cols = ['#f0c040','#ff8020','#ff4000','#fff','#ffcc60'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='pt';
+    const tx=(Math.random()-.5)*260, ty=-(280+Math.random()*260);
+    const dur=(1.4+Math.random()*1.4).toFixed(2), del=(Math.random()*.7).toFixed(2);
+    const sz=3+Math.random()*5;
+    p.style.cssText=`left:${Math.random()*100}%;top:95%;width:${sz}px;height:${sz}px;background:${cols[i%cols.length]};--tx:${tx}px;--ty:${ty}px;--dur:${dur}s;--del:${del}s;`;
+    c.appendChild(p);
+  }
+}
+
+// ── STORM BANNER ──────────────────────────────────────
+function showStorm(msg) {
+  const el = document.getElementById('storm');
+  document.getElementById('stormTxt').textContent = msg || "STORM'S COMING...";
+  el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'), 4000);
+}
+
+// ── TOAST ─────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type='bad') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('on'), 3500);
+}
+
+// ── CACHE REVEAL SHORTCUT ─────────────────────────────
+function showCacheReveal(creature) { showCacheDrop(3); }
+
+// ── WIN SCREEN ────────────────────────────────────────
+function showWin() {
+  G.running = false;
+  clearInterval(G.tickId);
+
+  const allPlayers = [
+    {name: G.name, score: playerScore(), me: true},
+    ...G.rivals.map(r => ({name: r.name, score: finalScore(r.gold, r.bounty), me: false}))
+  ].sort((a,b) => b.score - a.score);
+
+  const won  = allPlayers[0].me;
+  const rank = allPlayers.findIndex(p => p.me) + 1;
+
+  document.getElementById('winMedal').textContent   = ['🏆','🥈','🥉','4️⃣','5️⃣','6️⃣'][rank-1] || '🏅';
+  document.getElementById('winTitle').textContent   = won ? 'FRONTIER CHAMPION!' : 'RANK #' + rank;
+  document.getElementById('winSub').textContent     = G.name + ' · ' + (G.faction||'Frontier') + ' · Frontier Gambit';
+  document.getElementById('wGD').textContent        = G.gold.toLocaleString();
+  document.getElementById('wBT').textContent        = G.bounty.toLocaleString();
+  document.getElementById('wSC').textContent        = playerScore().toLocaleString();
+  document.getElementById('wCR').textContent        = G.creaturesUsed;
+  document.getElementById('winTitle2').textContent  = won ? '🌟 Title Earned: "Held the Line"' :
+    rank <= 3 ? '⭐ Top 3 Finish — Well played!' : 'Keep riding, stranger.';
+
+  document.getElementById('winOv').classList.add('on');
+}
+
+// ── MAIN TICK ─────────────────────────────────────────
+let lastTick = 0;
+function gameTick(ts) {
+  if (!G.running) return;
+  if (!lastTick) lastTick = ts;
+  const dt = Math.min((ts - lastTick) / 1000, 0.1);
+  lastTick = ts;
+
+  // Timer
+  G.timeLeft -= dt;
+  if (G.timeLeft <= 0) { G.timeLeft = 0; showWin(); return; }
+  renderTimer();
+
+  // Gather
+  gatherTick(dt);
+
+  // Speed boost timer
+  if (G.gatherSpeedTimer > 0) {
+    G.gatherSpeedTimer -= dt;
+    if (G.gatherSpeedTimer <= 0) { G.gatherSpeed = 1.0; G.gatherSpeedTimer = 0; toast('🐴 Stallion speed boost ended.','info'); }
+  }
+
+  // Defend flashpoint
+  if (G.defendActive && G.gatheringTile >= 0) {
+    G.defendAccum += dt * (G.blitzActive ? 6 : 2);
+  }
+
+  // Flashpoint countdown
+  if (G.fp) {
+    G.fpTimer -= dt;
+    if (G.fpTimer <= 0) endFlashpoint();
+    else renderFpBanner();
+  } else {
+    G.nextFp -= dt;
+    if (G.nextFp <= 0) startFlashpoint();
+    else renderFpBanner();
+  }
+
+  // AI
+  aiTick(dt);
+
+  // Rival scoring stats every 5 seconds (cheap update)
+  if (Math.floor(G.timeLeft) % 5 === 0 && Math.floor(G.timeLeft) !== G._lastLbUpdate) {
+    G._lastLbUpdate = Math.floor(G.timeLeft);
+    // Add some passive bounty to rivals
+    G.rivals.forEach(r => r.bounty += Math.floor(Math.random()*3));
+    renderLeaderboard();
+    renderStats();
+  }
+
+  requestAnimationFrame(gameTick);
+}
+
+// ── START GAME ────────────────────────────────────────
+function startGame() {
+  const name    = document.getElementById('nameInput').value.trim() || 'Stranger';
+  const faction = document.querySelector('.faction-btn.picked')?.dataset.f || '';
+
+  initGame(name, faction);
+
+  document.getElementById('screenTitle').classList.remove('active');
+  document.getElementById('screenGame').classList.add('active');
+  document.getElementById('gFaction').textContent = faction ? faction.toUpperCase() : '';
+
+  renderMap();
+  renderCreatures();
+  renderHorde();
+  renderStats();
+  renderTimer();
+  renderLeaderboard();
+  renderFpBanner();
+
+  G.running = true;
+  lastTick = 0;
+  requestAnimationFrame(gameTick);
+
+  setTimeout(() => toast('⭐ Welcome to Frontier Gambit! Tap tiles to gather Gold Dust.','info'), 800);
+}
+
+// ── TITLE SCREEN WIRING ───────────────────────────────
+document.querySelectorAll('.faction-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.faction-btn').forEach(b=>b.classList.remove('picked'));
+    btn.classList.add('picked');
+    checkStart();
+  });
+});
+
+const nameInput = document.getElementById('nameInput');
+nameInput.addEventListener('input', checkStart);
+
+function checkStart() {
+  const name = document.getElementById('nameInput').value.trim();
+  const fac  = document.querySelector('.faction-btn.picked');
+  document.getElementById('startBtn').disabled = !name || !fac;
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  if (!document.getElementById('startBtn').disabled) startGame();
+});
+</script>
+</body>
+</html>
