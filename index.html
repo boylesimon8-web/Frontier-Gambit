@@ -72,7 +72,7 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
 .g-phase{font-size:9px;letter-spacing:2px;color:var(--dim);}
 
 /* stats */
-.g-stats{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;background:#3a1e00;}
+.g-stats{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr 1px 1fr;background:#3a1e00;}
 .g-stat{background:#110700;padding:7px 8px;text-align:center;}
 .g-stat-lbl{font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;}
 .g-stat-val{font-size:18px;font-weight:bold;font-variant-numeric:tabular-nums;}
@@ -352,6 +352,8 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
     <div class="g-stat"><div class="g-stat-lbl">🎯 Bounty</div><div class="g-stat-val bt" id="svBT">0</div></div>
     <div class="stat-div"></div>
     <div class="g-stat"><div class="g-stat-lbl">📊 Score</div><div class="g-stat-val sc" id="svSC">0</div></div>
+    <div class="stat-div"></div>
+    <div class="g-stat"><div class="g-stat-lbl">⚔ Troops</div><div class="g-stat-val" id="svTR" style="color:#e8c060">0/1</div></div>
   </div>
 
   <!-- Flashpoint banner -->
@@ -543,12 +545,12 @@ function initGame(playerName, faction) {
     running: false,
     paused: false,
     // gather state
-    gatheringTile: -1,
-    gatherProgress: 0,
-    gatherDuration: 0,
-    gatherPuma: false,      // puma frenzy active
-    gatherShield: false,
-    gatherSpeed: 1.0,
+    troops: 1,              // total gatherer slots (grows to max 5)
+    gathers: [],            // [{tile, progress, duration}] — one per active gatherer
+    gathersCompleted: 0,    // total completed gathers (used for troop gain rate)
+    gatherPuma: false,      // puma frenzy: double next gold
+    gatherShield: false,    // grizzly shield: ignore next fight loss
+    gatherSpeed: 1.0,       // stallion speed multiplier
     gatherSpeedTimer: 0,
     // creatures
     inventory: [],          // max 3
@@ -582,6 +584,8 @@ function initGame(playerName, faction) {
       outlawMarks: 0,
       trapped: false,
       aiTimer: 2 + i * 1.5,
+      troops: 1,
+      gathersCompleted: 0,
     })),
     // tiles
     tiles: MAP_LAYOUT.map((grade,i) => ({
@@ -612,7 +616,7 @@ function tileClass(t) {
   if (t.standoff) return 'standoff';
   if (t.convoy)   return 'mine';
   if (t.trapped)  return 'trapped';
-  if (G.gatheringTile === t.idx) return 'mine';
+  if (G.gathers.some(g => g.tile === t.idx)) return 'mine';
   const onRival = G.rivals.find(r => r.tile === t.idx);
   if (onRival) return 'rival';
   if (t.grade === 3) return 'g3';
@@ -625,8 +629,8 @@ function tileIcon(t) {
   if (t.convoy)   return '💰';
   if (t.trapped)  return '🦂';
   const onRival = G.rivals.find(r => r.tile === t.idx);
-  if (onRival && G.gatheringTile !== t.idx) return onRival.icon;
-  if (G.gatheringTile === t.idx) return '⛏';
+  if (onRival && !G.gathers.some(g => g.tile === t.idx)) return onRival.icon;
+  if (G.gathers.some(g => g.tile === t.idx)) return '⛏';
   return GRADE_ICONS[t.grade] || '';
 }
 
@@ -642,11 +646,12 @@ function renderMap() {
     if (t.grade > 0) {
       d.onclick = () => onTileClick(i);
       // Progress bar if gathering here
-      if (G.gatheringTile === i) {
+      const ag = G.gathers.find(g => g.tile === i);
+      if (ag) {
         const bar = document.createElement('div');
         bar.className = 'tile-prog-bar';
-        bar.id = 'progBar';
-        bar.style.width = Math.floor((G.gatherProgress / G.gatherDuration) * 100) + '%';
+        bar.id = 'progBar_' + i;
+        bar.style.width = Math.floor((ag.progress / ag.duration) * 100) + '%';
         d.appendChild(bar);
       }
     }
@@ -659,11 +664,12 @@ function updateTile(i) {
   if (!d) return;
   d.className = 'tile ' + tileClass(G.tiles[i]);
   d.innerHTML = tileIcon(G.tiles[i]);
-  if (G.gatheringTile === i) {
+  const ag = G.gathers.find(g => g.tile === i);
+  if (ag) {
     const bar = document.createElement('div');
     bar.className = 'tile-prog-bar';
-    bar.id = 'progBar';
-    bar.style.width = Math.floor((G.gatherProgress / G.gatherDuration) * 100) + '%';
+    bar.id = 'progBar_' + i;
+    bar.style.width = Math.floor((ag.progress / ag.duration) * 100) + '%';
     d.appendChild(bar);
   }
 }
@@ -671,8 +677,9 @@ function updateTile(i) {
 // ── STATS RENDER ──────────────────────────────────────
 function renderStats() {
   document.getElementById('svGD').textContent = G.gold.toLocaleString();
-  document.getElementById('svBT').textContent = G.bounty.toLocaleString();
+  document.getElementById('svBT').textContent = Math.floor(G.bounty).toLocaleString();
   document.getElementById('svSC').textContent = playerScore().toLocaleString();
+  document.getElementById('svTR').textContent = G.gathers.length + '/' + G.troops;
 }
 
 // ── TIMER RENDER ──────────────────────────────────────
@@ -788,28 +795,30 @@ function onTileClick(i) {
     return;
   }
 
-  // Start/change gather
-  if (G.gatheringTile === i) return; // already here
+  // Start gather — check slot availability
+  if (G.gathers.some(g => g.tile === i)) return; // already gathering this tile
+  if (G.gathers.length >= G.troops) {
+    toast('No free troops! Wait for a gather to finish.', 'bad');
+    return;
+  }
   startGather(i);
 }
 
 function startGather(i) {
-  const prev = G.gatheringTile;
-  G.gatheringTile = i;
-  G.gatherProgress = 0;
   const dur = GRADE_TIME[G.tiles[i].grade];
-  G.gatherDuration = G.gatherSpeed !== 1.0 ? dur * G.gatherSpeed : dur;
-  if (prev >= 0) updateTile(prev);
+  const actualDur = G.gatherSpeed !== 1.0 ? dur * G.gatherSpeed : dur;
+  G.gathers.push({ tile: i, progress: 0, duration: actualDur });
   updateTile(i);
+  renderStats();
   toast('⛏ Gathering ' + GRADE_NAMES[G.tiles[i].grade] + ' tile...', 'info');
   tutOnGatherStart();
 }
 
-function finishGather() {
-  const i = G.gatheringTile;
+function finishGather(gatherIdx) {
+  const g = G.gathers[gatherIdx];
+  const i = g.tile;
   const tile = G.tiles[i];
-  G.gatheringTile = -1;
-  G.gatherProgress = 0;
+  G.gathers.splice(gatherIdx, 1);
 
   // Check trap
   if (tile.trapped) {
@@ -821,19 +830,19 @@ function finishGather() {
     return;
   }
 
-  // Check rival conflict
+  // Check rival conflict — outcome determined by troop comparison
   const rival = G.rivals.find(r => r.tile === i);
   if (rival && !G.gatherShield) {
-    // Fight — bounty tokens if we win
-    const won = Math.random() > 0.4;
-    if (won) {
+    const playerWins = G.troops > rival.troops || (G.troops === rival.troops && Math.random() > 0.5);
+    if (playerWins) {
       const bt = G.blitzActive ? 150 : 50;
       G.bounty += bt;
-      toast(`⚔ Drove off ${rival.name}! +${bt} Bounty Tokens`, 'good');
+      toast(`⚔ Outmanned ${rival.name}! +${bt} Bounty Tokens`, 'good');
       rival.tile = -1;
       rival.gatherTimer = 0;
     } else {
-      toast(`⚔ ${rival.name} held the tile! You were pushed back.`, 'bad');
+      G.troops = Math.max(1, G.troops - 1);
+      toast(`⚔ ${rival.name} outgunned you! Lost a troop. (${G.troops} left)`, 'bad');
       renderStats();
       updateTile(i);
       return;
@@ -843,7 +852,7 @@ function finishGather() {
 
   // Gold earned
   let base = GRADE_BASE[tile.grade];
-  if (G.gatherPuma) { base *= 2; G.gatherPuma = false; toast('🦁 Puma Frenzy! Double gold!','good'); }
+  if (G.gatherPuma) { base *= 2; G.gatherPuma = false; toast('🦁 Puma Frenzy! Double gold!', 'good'); }
   if (tile.convoy)  { base += 250; tile.convoy = false; toast('💰 You grabbed the Gold Convoy! +250 bonus!', 'good'); }
   if (tile.standoff && G.fpTimer <= 5) { base += 300; toast('⭐ Standoff winner! +300 Gold Dust!', 'good'); }
 
@@ -857,6 +866,14 @@ function finishGather() {
   const dropChance = [0, 0.12, 0.20, 0.32][tile.grade];
   if (Math.random() < dropChance && G.inventory.length < 3) {
     setTimeout(() => showCacheDrop(tile.grade), 600);
+  }
+
+  // Gain 1 troop every 2 completed gathers (max 5)
+  G.gathersCompleted++;
+  if (G.gathersCompleted % 2 === 0 && G.troops < 5) {
+    G.troops++;
+    renderStats();
+    toast(`⚔ New troop! You command ${G.troops} gatherers now.`, 'good');
   }
 }
 
@@ -875,11 +892,14 @@ function floatPoints(tileIdx, text) {
 
 // ── GATHER TICK ───────────────────────────────────────
 function gatherTick(dt) {
-  if (G.gatheringTile < 0) return;
-  G.gatherProgress += dt;
-  const bar = document.getElementById('progBar');
-  if (bar) bar.style.width = Math.min(G.gatherProgress / G.gatherDuration * 100, 100) + '%';
-  if (G.gatherProgress >= G.gatherDuration) finishGather();
+  // Iterate backwards so splice inside finishGather doesn't skip entries
+  for (let idx = G.gathers.length - 1; idx >= 0; idx--) {
+    const g = G.gathers[idx];
+    g.progress += dt;
+    const bar = document.getElementById('progBar_' + g.tile);
+    if (bar) bar.style.width = Math.min(g.progress / g.duration * 100, 100) + '%';
+    if (g.progress >= g.duration) finishGather(idx);
+  }
 }
 
 // ── AI SYSTEM ─────────────────────────────────────────
@@ -895,8 +915,8 @@ function aiTick(dt) {
     const intervals = {aggressive:2.5,patient:5,fast:1.8,bounty:3,horde:4};
     r.aiTimer = (intervals[r.style]||3) + Math.random()*2;
 
-    // Pick a tile to target
-    const eligible = G.tiles.filter(t => t.grade > 0 && G.tiles.indexOf(t) !== G.gatheringTile);
+    // Pick a tile to target (exclude tiles the player is currently gathering)
+    const eligible = G.tiles.filter(t => t.grade > 0 && !G.gathers.some(g => g.tile === G.tiles.indexOf(t)));
     if (!eligible.length) return;
 
     let target;
@@ -955,6 +975,9 @@ function aiTick(dt) {
       r.gold += earned;
       r.tile = -1;
       r.gatherTimer = 0;
+      // Rivals build troops at the same rate as the player
+      r.gathersCompleted++;
+      if (r.gathersCompleted % 2 === 0 && r.troops < 5) r.troops++;
       updateTile(G.tiles.indexOf(tile));
     }
   });
@@ -1046,7 +1069,7 @@ function applyCreatureEffect(c, tileIdx) {
     }
     case 'random': {
       const rolls = [
-        ()=>{G.gold+=500;renderStats();floatPoints(G.gatheringTile>=0?G.gatheringTile:35,'+500');toast('🐰 Jackalope: +500 Gold Dust! Lucky!','good');},
+        ()=>{G.gold+=500;renderStats();floatPoints(G.gathers.length>0?G.gathers[0].tile:35,'+500');toast('🐰 Jackalope: +500 Gold Dust! Lucky!','good');},
         ()=>{G.bounty+=300;renderStats();toast('🐰 Jackalope: +300 Bounty Tokens! Not bad!','good');},
         ()=>{G.gatherPuma=true;toast('🐰 Jackalope: Puma Frenzy triggered! Double next gather!','good');},
         ()=>{G.gold=Math.max(0,G.gold-100);renderStats();toast('🐰 Jackalope: Self-sting! Lost 100 gold. Ouch.','bad');},
@@ -1327,7 +1350,7 @@ function gameTick(ts) {
   }
 
   // Defend flashpoint
-  if (G.defendActive && G.gatheringTile >= 0) {
+  if (G.defendActive && G.gathers.length > 0) {
     G.defendAccum += dt * (G.blitzActive ? 6 : 2);
   }
 
