@@ -57,6 +57,30 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
 .start-btn:hover{background:linear-gradient(135deg,#5a2800,#2a1000);border-color:var(--gold);}
 .start-btn:disabled{opacity:.4;cursor:default;}
 
+/* ── PROFILE BADGE (title screen, return visit) ── */
+.profile-badge{display:flex;align-items:center;gap:12px;background:#120800;
+  border:1px solid var(--gold2);border-radius:8px;padding:12px 16px;margin-bottom:20px;text-align:left;}
+.pb-icon{font-size:32px;line-height:1;}
+.pb-name{font-size:18px;color:var(--gold);font-weight:bold;letter-spacing:1px;}
+.pb-faction{font-size:10px;letter-spacing:2px;color:var(--dim);margin-top:2px;text-transform:uppercase;}
+.pb-stats{font-size:10px;color:#a07040;margin-top:3px;}
+.change-id-btn{background:none;border:none;color:var(--dim);font-size:10px;letter-spacing:2px;
+  cursor:pointer;margin-top:12px;text-decoration:underline;font-family:Georgia,serif;}
+.change-id-btn:hover{color:var(--gold);}
+
+/* ── PROFILE CREATION SCREEN ── */
+.pf-wrap{text-align:center;padding:24px 20px;max-width:400px;width:100%;}
+.pf-hdr{font-size:14px;letter-spacing:4px;color:var(--gold);margin-bottom:20px;text-transform:uppercase;}
+.pf-faction-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.pf-card{padding:14px 6px;background:#120800;border:2px solid var(--border);border-radius:8px;
+  cursor:pointer;transition:all .25s;text-align:center;}
+.pf-card:hover{border-color:var(--gold2);background:#1e0e00;}
+.pf-card.selected{border-color:var(--gold);background:#2a1400;box-shadow:0 0 16px rgba(200,150,10,.3);}
+.pf-card-icon{font-size:28px;display:block;margin-bottom:6px;}
+.pf-card-name{font-size:11px;letter-spacing:2px;color:var(--gold);font-weight:bold;}
+.pf-card-perk{font-size:9px;letter-spacing:1px;color:#e07820;margin-top:3px;}
+.pf-card-desc{font-size:9px;color:var(--dim);margin-top:5px;line-height:1.4;}
+
 /* ── GAME SCREEN ── */
 #screenGame{background:#090500;justify-content:flex-start;overflow-y:scroll;scrollbar-gutter:stable;}
 .game-shell{width:100%;max-width:430px;margin:0 auto;display:block;min-height:100%;}
@@ -311,23 +335,62 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
   </div>
 </div>
 
+<!-- ══════════════ PROFILE CREATION SCREEN ══════════════ -->
+<div id="screenProfile" class="screen">
+  <div class="pf-wrap">
+    <div class="title-star">⭐</div>
+    <div class="title-name">FRONTIER GAMBIT</div>
+    <div class="title-tagline">THE RECKONING</div>
+    <div class="pf-hdr">Who are you?</div>
+    <input class="name-input" id="pfNameInput" type="text" maxlength="16" placeholder="Your name, stranger...">
+    <div class="faction-lbl">CHOOSE YOUR ALLEGIANCE</div>
+    <div class="pf-faction-grid">
+      <div class="pf-card" data-f="outlaws">
+        <span class="pf-card-icon">🤠</span>
+        <div class="pf-card-name">OUTLAWS</div>
+        <div class="pf-card-perk">Ride Hard</div>
+        <div class="pf-card-desc">Win a contest? 40% chance of double gold.</div>
+      </div>
+      <div class="pf-card" data-f="rangers">
+        <span class="pf-card-icon">⭐</span>
+        <div class="pf-card-name">RANGERS</div>
+        <div class="pf-card-perk">Law & Order</div>
+        <div class="pf-card-desc">+20 Bounty Tokens every time you win a fight.</div>
+      </div>
+      <div class="pf-card" data-f="prospectors">
+        <span class="pf-card-icon">⛏</span>
+        <div class="pf-card-name">PROSPECTORS</div>
+        <div class="pf-card-perk">Gold Rush</div>
+        <div class="pf-card-desc">+20 Gold Dust on every Grade 3 tile.</div>
+      </div>
+    </div>
+    <button class="start-btn" id="pfSaveBtn" disabled>CLAIM THE FRONTIER</button>
+  </div>
+</div>
+
 <!-- ══════════════ TITLE SCREEN ══════════════ -->
-<div id="screenTitle" class="screen active">
+<div id="screenTitle" class="screen">
   <div class="title-wrap">
     <div class="title-star">⭐</div>
     <div class="title-name">FRONTIER GAMBIT</div>
     <div class="title-tagline">THE RECKONING</div>
-    <input class="name-input" id="nameInput" type="text" maxlength="16" placeholder="Enter your name, stranger...">
-    <div class="faction-lbl">CHOOSE YOUR FACTION</div>
-    <div class="factions">
-      <div class="faction-btn" data-f="outlaws"><span class="faction-icon">🤠</span>Outlaws</div>
-      <div class="faction-btn" data-f="rangers"><span class="faction-icon">⭐</span>Rangers</div>
-      <div class="faction-btn" data-f="prospectors"><span class="faction-icon">⛏</span>Prospectors</div>
+    <!-- Profile badge shown when profile exists -->
+    <div id="titleProfileBadge" style="display:none"></div>
+    <!-- Name + faction inputs (hidden when profile exists) -->
+    <div id="titleSetupInputs">
+      <input class="name-input" id="nameInput" type="text" maxlength="16" placeholder="Enter your name, stranger...">
+      <div class="faction-lbl">CHOOSE YOUR FACTION</div>
+      <div class="factions">
+        <div class="faction-btn" data-f="outlaws"><span class="faction-icon">🤠</span>Outlaws</div>
+        <div class="faction-btn" data-f="rangers"><span class="faction-icon">⭐</span>Rangers</div>
+        <div class="faction-btn" data-f="prospectors"><span class="faction-icon">⛏</span>Prospectors</div>
+      </div>
     </div>
     <button class="start-btn" id="startBtn" disabled>RIDE OUT</button>
     <div style="font-size:10px;color:var(--dim);margin-top:10px;letter-spacing:1px;">
       8 minutes · Gather · Collect Creatures · Outlast your rivals
     </div>
+    <button class="change-id-btn" id="changeIdBtn" style="display:none">CHANGE IDENTITY</button>
   </div>
 </div>
 
@@ -842,7 +905,9 @@ function finishGather(gatherIdx) {
   if (rival && !G.gatherShield) {
     const playerWins = G.troops > rival.troops || (G.troops === rival.troops && Math.random() > 0.5);
     if (playerWins) {
-      const bt = G.blitzActive ? 150 : 50;
+      let bt = G.blitzActive ? 150 : 50;
+      // Rangers perk: +20 Bounty per win
+      if (G.faction === 'rangers') { bt += 20; }
       G.bounty += bt;
       toast(`⚔ Outmanned ${rival.name}! +${bt} Bounty Tokens`, 'good');
       rival.tile = -1;
@@ -862,6 +927,10 @@ function finishGather(gatherIdx) {
   if (G.gatherPuma) { base *= 2; G.gatherPuma = false; toast('🦁 Puma Frenzy! Double gold!', 'good'); }
   if (tile.convoy)  { base += 250; tile.convoy = false; toast('💰 You grabbed the Gold Convoy! +250 bonus!', 'good'); }
   if (tile.standoff && G.fpTimer <= 5) { base += 300; toast('⭐ Standoff winner! +300 Gold Dust!', 'good'); }
+  // Prospectors perk: +20 Gold Dust on Grade 3
+  if (G.faction === 'prospectors' && tile.grade === 3) { base += 20; }
+  // Outlaws perk: 40% chance of double gold when coming off a contested tile
+  if (G.faction === 'outlaws' && rival && Math.random() < 0.4) { base *= 2; toast('🤠 Outlaw bonus! Double gold from contested tile!', 'good'); }
 
   G.gold += base;
   renderStats();
@@ -1313,6 +1382,17 @@ function showWin() {
   G.running = false;
   clearInterval(G.tickId);
 
+  // Save stats to profile
+  const profile = loadProfile();
+  if (profile) {
+    const score = playerScore();
+    saveProfile({
+      gamesPlayed: (profile.gamesPlayed || 0) + 1,
+      bestScore:   Math.max(profile.bestScore || 0, score),
+      totalGold:   (profile.totalGold || 0) + G.gold,
+    });
+  }
+
   const allPlayers = [
     {name: G.name, score: playerScore(), me: true},
     ...G.rivals.map(r => ({name: r.name, score: finalScore(r.gold, r.bounty), me: false}))
@@ -1519,6 +1599,94 @@ function tutOnGoldEarned()   {
 function tutOnCreatureDrop() { if (!_tutTriggered.creature)  { _tutTriggered.creature=true;  setTimeout(() => _showHint(4), 800); } }
 function tutOnFlashpoint()   { if (!_tutTriggered.flashpoint){ _tutTriggered.flashpoint=true; setTimeout(() => _showHint(5), 600); } }
 
+// ── PROFILE SYSTEM ────────────────────────────────────
+const PROFILE_KEY = 'fg_profile';
+const FACTION_META = {
+  outlaws:     { icon:'🤠', label:'OUTLAWS',     perk:'Ride Hard'   },
+  rangers:     { icon:'⭐', label:'RANGERS',     perk:'Law & Order' },
+  prospectors: { icon:'⛏', label:'PROSPECTORS', perk:'Gold Rush'   },
+};
+
+function loadProfile() {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch(e) { return null; }
+}
+function saveProfile(patch) {
+  const p = Object.assign(loadProfile() || {}, patch);
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+  return p;
+}
+
+function applyProfileToTitle(profile) {
+  const m = FACTION_META[profile.faction] || {};
+  // Show badge, hide raw inputs
+  document.getElementById('titleProfileBadge').style.display = 'block';
+  document.getElementById('titleProfileBadge').innerHTML =
+    `<div class="profile-badge">
+       <span class="pb-icon">${m.icon || '🤠'}</span>
+       <div>
+         <div class="pb-name">${profile.name}</div>
+         <div class="pb-faction">${m.label || ''} · ${m.perk || ''}</div>
+         <div class="pb-stats">${profile.gamesPlayed || 0} games played · Best score: ${(profile.bestScore||0).toLocaleString()}</div>
+       </div>
+     </div>`;
+  document.getElementById('titleSetupInputs').style.display = 'none';
+  document.getElementById('changeIdBtn').style.display = 'block';
+  document.getElementById('startBtn').disabled = false;
+  // Still pre-fill hidden inputs so startGame() can read them
+  document.getElementById('nameInput').value = profile.name;
+  document.querySelectorAll('.faction-btn').forEach(b =>
+    b.classList.toggle('picked', b.dataset.f === profile.faction));
+}
+
+function initApp() {
+  const profile = loadProfile();
+  if (profile && profile.name && profile.faction) {
+    applyProfileToTitle(profile);
+    document.getElementById('screenTitle').classList.add('active');
+  } else {
+    document.getElementById('screenProfile').classList.add('active');
+  }
+}
+
+// Profile creation screen wiring
+document.querySelectorAll('.pf-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.pf-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    checkPfReady();
+  });
+});
+document.getElementById('pfNameInput').addEventListener('input', checkPfReady);
+function checkPfReady() {
+  const name = document.getElementById('pfNameInput').value.trim();
+  const fac  = document.querySelector('.pf-card.selected');
+  document.getElementById('pfSaveBtn').disabled = !name || !fac;
+}
+document.getElementById('pfSaveBtn').addEventListener('click', () => {
+  const name    = document.getElementById('pfNameInput').value.trim();
+  const faction = document.querySelector('.pf-card.selected')?.dataset.f;
+  if (!name || !faction) return;
+  const profile = saveProfile({ name, faction, gamesPlayed: 0, bestScore: 0, totalGold: 0 });
+  document.getElementById('screenProfile').classList.remove('active');
+  applyProfileToTitle(profile);
+  document.getElementById('screenTitle').classList.add('active');
+});
+
+// Change identity button
+document.getElementById('changeIdBtn').addEventListener('click', () => {
+  const profile = loadProfile();
+  if (profile) {
+    // Pre-fill the profile screen with existing data
+    document.getElementById('pfNameInput').value = profile.name;
+    document.querySelectorAll('.pf-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.f === profile.faction);
+    });
+    document.getElementById('pfSaveBtn').disabled = false;
+  }
+  document.getElementById('screenTitle').classList.remove('active');
+  document.getElementById('screenProfile').classList.add('active');
+});
+
 // ── TITLE SCREEN WIRING ───────────────────────────────
 document.querySelectorAll('.faction-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1540,6 +1708,9 @@ function checkStart() {
 document.getElementById('startBtn').addEventListener('click', () => {
   if (!document.getElementById('startBtn').disabled) startGame();
 });
+
+// Boot the app
+initApp();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
