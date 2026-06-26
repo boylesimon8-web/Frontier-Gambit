@@ -67,6 +67,9 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
 .change-id-btn{background:none;border:none;color:var(--dim);font-size:10px;letter-spacing:2px;
   cursor:pointer;margin-top:12px;text-decoration:underline;font-family:Georgia,serif;}
 .change-id-btn:hover{color:var(--gold);}
+.share-game-btn{background:none;border:1px solid #3a2000;color:var(--dim);font-size:10px;letter-spacing:2px;
+  cursor:pointer;margin-top:10px;padding:8px 18px;border-radius:4px;font-family:Georgia,serif;transition:all .2s;}
+.share-game-btn:hover{border-color:var(--gold2);color:var(--gold);}
 
 /* ── PROFILE CREATION SCREEN ── */
 .pf-wrap{text-align:center;padding:24px 20px;max-width:400px;width:100%;}
@@ -243,10 +246,10 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
 .cr-btn:hover{background:#250f00;}
 
 /* Winner */
-.win-ov{background:rgba(0,0,0,0);}
+.win-ov{background:rgba(0,0,0,0);overflow-y:auto;align-items:flex-start;}
 .win-ov.on{background:rgba(0,0,0,.96);}
-.win-box{text-align:center;padding:0 24px;transform:scale(.3) translateY(40px);opacity:0;
-  transition:all .6s cubic-bezier(.34,1.56,.64,1);}
+.win-box{text-align:center;padding:20px 24px 28px;transform:scale(.3) translateY(40px);opacity:0;
+  transition:all .6s cubic-bezier(.34,1.56,.64,1);margin:auto;width:100%;max-width:440px;box-sizing:border-box;}
 .win-ov.on .win-box{transform:scale(1) translateY(0);opacity:1;}
 .win-medal{font-size:70px;animation:medal .6s .2s cubic-bezier(.34,1.56,.64,1) both;}
 @keyframes medal{0%{transform:translateY(-60px) scale(.4);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
@@ -391,6 +394,7 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
       8 minutes · Gather · Collect Creatures · Outlast your rivals
     </div>
     <button class="change-id-btn" id="changeIdBtn" style="display:none">CHANGE IDENTITY</button>
+    <button class="share-game-btn" onclick="shareGame()">📤 SHARE GAME</button>
   </div>
 </div>
 
@@ -1438,6 +1442,19 @@ function shareScore() {
       btn.classList.add('copied');
       setTimeout(() => { btn.textContent = '📤 SHARE SCORE'; btn.classList.remove('copied'); }, 2500);
     }).catch(() => { prompt('Copy and share this:', text); });
+  }
+}
+
+function shareGame() {
+  const url  = 'https://boylesimon8-web.github.io/Frontier-Gambit/';
+  const text = '🤠 Come play Frontier Gambit — a fast-paced western territory game!\n\nGather gold, battle rivals, earn your title. 8 minutes. Can you hold the frontier?\n\n👇\n' + url;
+  if (navigator.share) {
+    navigator.share({ title: 'Frontier Gambit', text, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.querySelector('.share-game-btn');
+      if (btn) { const o = btn.textContent; btn.textContent = '✓ LINK COPIED!'; setTimeout(() => btn.textContent = o, 2500); }
+    }).catch(() => { prompt('Copy this link:', url); });
   }
 }
 

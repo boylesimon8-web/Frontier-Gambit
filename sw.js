@@ -1,4 +1,4 @@
-const CACHE = 'frontier-gambit-v3';
+const CACHE = 'frontier-gambit-v4';
 const ASSETS = ['./', './index.html', './icon.svg', './manifest.json'];
 
 self.addEventListener('install', e => {
