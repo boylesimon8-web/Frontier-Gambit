@@ -111,6 +111,8 @@ html,body{height:100%;overflow:hidden;font-family:Georgia,'Times New Roman',seri
 .tile.g3{background:#3a1800;border-color:#c06010;box-shadow:0 0 5px rgba(200,100,10,.35);}
 .tile.mine{background:#003020;border-color:var(--green);box-shadow:0 0 6px rgba(128,192,64,.4);}
 .tile.rival{background:#200018;border-color:#6020a0;}
+.tile.contested{background:#2a0800;border-color:#ff4400;box-shadow:0 0 10px rgba(255,60,0,.6);animation:contest .6s ease-in-out infinite;}
+@keyframes contest{0%,100%{border-color:#ff4400;box-shadow:0 0 8px rgba(255,60,0,.5);}50%{border-color:#ff8844;box-shadow:0 0 18px rgba(255,120,0,.9);}}
 .tile.hot{background:#220800;border-color:var(--red);animation:hot .9s infinite;}
 .tile.standoff{background:#221200;border:2px solid var(--gold);animation:sf 1s infinite;}
 .tile.trapped{background:#1a1500;border-color:#907000;}
@@ -616,8 +618,10 @@ function tileClass(t) {
   if (t.standoff) return 'standoff';
   if (t.convoy)   return 'mine';
   if (t.trapped)  return 'trapped';
-  if (G.gathers.some(g => g.tile === t.idx)) return 'mine';
+  const isMine = G.gathers.some(g => g.tile === t.idx);
   const onRival = G.rivals.find(r => r.tile === t.idx);
+  if (isMine && onRival) return 'contested';
+  if (isMine) return 'mine';
   if (onRival) return 'rival';
   if (t.grade === 3) return 'g3';
   if (t.grade === 2) return 'g2';
@@ -629,8 +633,11 @@ function tileIcon(t) {
   if (t.convoy)   return '💰';
   if (t.trapped)  return '🦂';
   const onRival = G.rivals.find(r => r.tile === t.idx);
-  if (onRival && !G.gathers.some(g => g.tile === t.idx)) return onRival.icon;
-  if (G.gathers.some(g => g.tile === t.idx)) return '⛏';
+  const isMineIcon = G.gathers.some(g => g.tile === t.idx);
+  const onRivalIcon = G.rivals.find(r => r.tile === t.idx);
+  if (isMineIcon && onRivalIcon) return '⚔';
+  if (onRivalIcon) return onRivalIcon.icon;
+  if (isMineIcon) return '⛏';
   return GRADE_ICONS[t.grade] || '';
 }
 
@@ -915,30 +922,32 @@ function aiTick(dt) {
     const intervals = {aggressive:2.5,patient:5,fast:1.8,bounty:3,horde:4};
     r.aiTimer = (intervals[r.style]||3) + Math.random()*2;
 
-    // Pick a tile to target (exclude tiles the player is currently gathering)
-    const eligible = G.tiles.filter(t => t.grade > 0 && !G.gathers.some(g => g.tile === G.tiles.indexOf(t)));
-    if (!eligible.length) return;
+    // All non-empty tiles are fair game — aggressive rivals actively target player tiles
+    const allEligible = G.tiles.filter(t => t.grade > 0);
+    const safeEligible = allEligible.filter(t => !G.gathers.some(g => g.tile === G.tiles.indexOf(t)));
+    if (!allEligible.length) return;
 
     let target;
     if (r.style === 'aggressive') {
-      // Prefer Grade 3, sometimes player's tile
-      target = eligible.sort((a,b) => b.grade-a.grade)[Math.floor(Math.random()*2)];
+      // Aggressive rivals WILL contest player tiles — sorted by grade, sometimes picks player's
+      const pool = Math.random() < 0.55 ? allEligible : safeEligible;
+      target = pool.sort((a,b) => b.grade-a.grade)[Math.floor(Math.random()*2)] || pool[0];
     } else if (r.style === 'patient') {
-      // Grade 1-2 only
-      const safe = eligible.filter(t=>t.grade<3);
-      target = safe[Math.floor(Math.random()*safe.length)] || eligible[0];
+      // Patient rivals avoid conflict — stick to safe grade 1-2 tiles
+      const safe = safeEligible.filter(t=>t.grade<3);
+      target = safe[Math.floor(Math.random()*safe.length)] || safeEligible[0] || allEligible[0];
     } else if (r.style === 'fast') {
-      // Random
-      target = eligible[Math.floor(Math.random()*eligible.length)];
+      // Fast rivals pick randomly from everything
+      target = allEligible[Math.floor(Math.random()*allEligible.length)];
     } else if (r.style === 'bounty') {
-      // Target outlaws or high-grade
-      const outlaw = G.outlawMarks > 0;
-      target = outlaw && Math.random()>.5 ? eligible[0] :
-               eligible.sort((a,b)=>b.grade-a.grade)[0];
+      // Bounty rivals prefer high-grade, sometimes contest player
+      const pool = Math.random() < 0.35 ? allEligible : safeEligible;
+      target = pool.sort((a,b)=>b.grade-a.grade)[0];
     } else {
-      // horde style - gather anything
-      target = eligible[Math.floor(Math.random()*eligible.length)];
+      // Horde style — gather anything safe
+      target = safeEligible[Math.floor(Math.random()*safeEligible.length)] || allEligible[0];
     }
+    if (!target) return;
 
     const prevTile = r.tile;
     r.tile = G.tiles.indexOf(target);
@@ -946,6 +955,11 @@ function aiTick(dt) {
     // Rival gather timer
     const speed = r.slowTimer > 0 ? 2 : 1;
     r.gatherTimer = GRADE_TIME[target.grade] * speed + Math.random()*2;
+
+    // Alert player when a rival steps onto their gathering tile
+    if (G.gathers.some(g => g.tile === r.tile)) {
+      toast(`⚠ ${r.name} is contesting your tile!`, 'bad');
+    }
 
     if (prevTile >= 0) updateTile(prevTile);
     updateTile(r.tile);
@@ -971,6 +985,26 @@ function aiTick(dt) {
         return;
       }
 
+      const tileIdx = G.tiles.indexOf(tile);
+
+      // If player is also gathering here, rival-initiated contest
+      const playerGatherIdx = G.gathers.findIndex(g => g.tile === tileIdx);
+      if (playerGatherIdx >= 0) {
+        const rivalWins = r.troops > G.troops || (r.troops === G.troops && Math.random() > 0.5);
+        if (rivalWins) {
+          G.gathers.splice(playerGatherIdx, 1);
+          G.troops = Math.max(1, G.troops - 1);
+          toast(`⚔ ${r.name} drove you off! Lost a troop. (${G.troops} left)`, 'bad');
+          renderStats();
+        } else {
+          toast(`⚔ Held your ground against ${r.name}!`, 'good');
+          r.tile = -1;
+          r.gatherTimer = 0;
+          updateTile(tileIdx);
+          return;
+        }
+      }
+
       const earned = GRADE_BASE[tile.grade] + Math.floor(Math.random()*10);
       r.gold += earned;
       r.tile = -1;
@@ -978,7 +1012,7 @@ function aiTick(dt) {
       // Rivals build troops at the same rate as the player
       r.gathersCompleted++;
       if (r.gathersCompleted % 2 === 0 && r.troops < 5) r.troops++;
-      updateTile(G.tiles.indexOf(tile));
+      updateTile(tileIdx);
     }
   });
 }
